@@ -1,0 +1,133 @@
+#ifndef ECALGARLICALGORITHMPARAMS_HH_
+#define ECALGARLICALGORITHMPARAMS_HH_
+
+#include <cmath>
+#include <vector>
+using std::vector;
+
+namespace ECALGarlicAlgorithmParameters {
+
+  static std::string _ecalPreClusterCollectionName;
+
+  static int _nLayersForSeeding;
+  static bool _correctPhi;
+  static bool _correctTheta;
+  static int _debug;
+  static float _xy_gap_transit_factor;
+  static int _nHitsMin;
+  static float _minEnergy;
+  static double _distanceFactor;
+  static int _minHits10X0;
+  static int _nIterations;
+  static float _maxSatelliteEn;
+  static float _minSatelliteEn;
+  static bool _applyGapCorrection;
+  static bool _removeHitsNearTracks;
+  static bool _rejectMLP;
+  static bool _mergeSatellites;
+  static int _cheatTracks;
+  static bool _includePreShower;
+  static int _minHitsForSeeding;
+
+  static vector<float> _toGeVParameters;
+  static vector<float> _toGeVParameters_EC;
+  static vector<float> _mlpCuts_B;
+  static vector<float> _mlpCuts_EC;
+
+  static vector<float> _corrThParameters0;
+  static vector<float> _corrThParameters1;
+
+  static vector<float> _corrPhiParameters0;
+  static vector<float> _corrPhiParameters1;
+  static vector<float> _corrPhiParameters2;
+  
+  static bool _correctLeakage;
+  
+
+  static vector<float> alp_params_B;
+  static vector<float> alp_params_EC;
+
+  static vector<float> bet_params_B;
+  static vector<float> bet_params_EC;
+
+  static vector<float> g_params_B;
+  static vector<float> g_params_EC;
+
+  static vector<float> d_params_B;
+  static vector<float> d_params_EC;
+
+  static vector<float> lam_params_B;
+  static vector<float> lam_params_EC;
+
+  static vector <float> _f1_params_b;
+  static vector <float> _f2_params_b;
+  static vector <float> _f1_params_e;
+  static vector <float> _f2_params_e;
+
+  static vector <float> par0_f_params;
+  static vector <float> par1_f_params;
+
+};
+
+
+// std::string ECALGarlicAlgorithmParameters::_ecalPreClusterCollectionName=0;
+int    ECALGarlicAlgorithmParameters::_nLayersForSeeding=0;
+bool   ECALGarlicAlgorithmParameters::_correctPhi=0;
+bool   ECALGarlicAlgorithmParameters::_correctTheta=0;
+int    ECALGarlicAlgorithmParameters::_debug=0;
+float  ECALGarlicAlgorithmParameters::_xy_gap_transit_factor=0;
+int    ECALGarlicAlgorithmParameters::_nHitsMin=0;
+float  ECALGarlicAlgorithmParameters::_minEnergy=0;
+double ECALGarlicAlgorithmParameters::_distanceFactor=0;
+int    ECALGarlicAlgorithmParameters::_minHits10X0=0;
+int    ECALGarlicAlgorithmParameters::_nIterations=0;
+float  ECALGarlicAlgorithmParameters::_maxSatelliteEn=0;
+float  ECALGarlicAlgorithmParameters::_minSatelliteEn=0;
+bool   ECALGarlicAlgorithmParameters::_applyGapCorrection=0;
+bool   ECALGarlicAlgorithmParameters::_removeHitsNearTracks=0;
+bool   ECALGarlicAlgorithmParameters::_rejectMLP=0;
+bool   ECALGarlicAlgorithmParameters::_mergeSatellites=0;
+int    ECALGarlicAlgorithmParameters::_cheatTracks=0;
+bool   ECALGarlicAlgorithmParameters::_includePreShower=0;
+int    ECALGarlicAlgorithmParameters::_minHitsForSeeding=0;
+bool   ECALGarlicAlgorithmParameters::_correctLeakage=0;
+
+/*
+  vector<float> _toGeVParameters;
+  vector<float> _toGeVParameters_EC;
+  vector<float> _mlpCuts_B;
+  vector<float> _mlpCuts_EC;
+
+  vector<float> _corrThParameters0;
+  vector<float> _corrThParameters1;
+
+  vector<float> _corrPhiParameters0;
+  vector<float> _corrPhiParameters1;
+  vector<float> _corrPhiParameters2;
+  
+
+  vector<float> alp_params_B;
+  vector<float> alp_params_EC;
+
+  vector<float> bet_params_B;
+  vector<float> bet_params_EC;
+
+  vector<float> g_params_B;
+  vector<float> g_params_EC;
+
+  vector<float> d_params_B;
+  vector<float> d_params_EC;
+
+  vector<float> lam_params_B;
+  vector<float> lam_params_EC;
+
+  vector <float> _f1_params_b;
+  vector <float> _f2_params_b;
+  vector <float> _f1_params_e;
+  vector <float> _f2_params_e;
+
+  vector <float> par0_f_params;
+  vector <float> par1_f_params;
+*/
+
+#endif
