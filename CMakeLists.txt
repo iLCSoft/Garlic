@@ -25,7 +25,7 @@ PROJECT( GARLIC CXX )
 
 # project version
 SET( ${PROJECT_NAME}_MAJOR_VERSION 2 )
-SET( ${PROJECT_NAME}_MINOR_VERSION 0 )
+SET( ${PROJECT_NAME}_MINOR_VERSION 1 )
 SET( ${PROJECT_NAME}_PATCH_LEVEL 0 )
 
 
@@ -154,38 +154,31 @@ IF( DEFINED ${PROJECT_NAME}_DEPENDS OR DEFINED BUILD_WITH OR DEFINED LINK_WITH )
     CHECK_DEPS()
 ENDIF()
 
-# create Dictionnary target
-SET( dict ${PROJECT_SOURCE_DIR}/src/ClusterParametersDict.cc )
-SET( dict ${PROJECT_SOURCE_DIR}/src/MCPhotonDict.cc )
-
-ADD_CUSTOM_TARGET( clean 
-	rm -f  ${PROJECT_SOURCE_DIR}/lib/lib_${PROJECT_NAME} )
-
-ADD_CUSTOM_TARGET( dictclean 
-	rm -f  ${PROJECT_SOURCE_DIR}/src/ClusterParametersDict.* 
-	rm -f  ${PROJECT_SOURCE_DIR}/src/MCPhotonDict.* )
-
-ADD_DEPENDENCIES( clean dictclean )
+# ---------- rootcint generated stuff ---------------------------------------
+SET( DICT_OUTPUT_DIR "${PROJECT_BINARY_DIR}/dict" )
+SET_DIRECTORY_PROPERTIES( PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${DICT_OUTPUT_DIR}" )
 
 ADD_CUSTOM_COMMAND(
-	OUTPUT ${PROJECT_SOURCE_DIR}/src/ClusterParametersDict.cc
+	OUTPUT ${DICT_OUTPUT_DIR}/ClusterParametersDict.cc
+    COMMAND mkdir ARGS -p ${DICT_OUTPUT_DIR}
 	COMMAND  "${ROOT_HOME}/bin/rootcint"  
-	-f ${PROJECT_SOURCE_DIR}/src/ClusterParametersDict.cc
-	 -c ${PROJECT_SOURCE_DIR}/include/ClusterParameters.hh-
+	  -f ${DICT_OUTPUT_DIR}/ClusterParametersDict.cc
+	  -c ${PROJECT_SOURCE_DIR}/include/ClusterParameters.hh-
 	DEPENDS ${PROJECT_SOURCE_DIR}/include/ClusterParameters.hh 
-	)
+)
+
 ADD_CUSTOM_COMMAND(
-	OUTPUT ${PROJECT_SOURCE_DIR}/src/MCPhotonDict.cc
+	OUTPUT ${DICT_OUTPUT_DIR}/MCPhotonDict.cc
+    COMMAND mkdir ARGS -p ${DICT_OUTPUT_DIR}
 	COMMAND  "${ROOT_HOME}/bin/rootcint"  
-	-f ${PROJECT_SOURCE_DIR}/src/MCPhotonDict.cc
+	-f ${DICT_OUTPUT_DIR}/MCPhotonDict.cc
 	 -c ${PROJECT_SOURCE_DIR}/include/MCPhoton.hh-
 	DEPENDS ${PROJECT_SOURCE_DIR}/include/MCPhoton.hh 
-	)
+)
 
-LIST(APPEND library_sources
-	${PROJECT_SOURCE_DIR}/src/ClusterParametersDict.cc )
-LIST(APPEND library_sources
-	${PROJECT_SOURCE_DIR}/src/MCPhotonDict.cc )
+LIST(APPEND library_sources ${DICT_OUTPUT_DIR}/ClusterParametersDict.cc )
+LIST(APPEND library_sources	${DICT_OUTPUT_DIR}/MCPhotonDict.cc )
+# ---------------------------------------------------------------------------
 
 # LIBRARY
 ADD_LIBRARY( lib_${PROJECT_NAME} ${library_sources} )
