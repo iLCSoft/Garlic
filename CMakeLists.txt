@@ -37,7 +37,7 @@ OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" OFF )
 
 # project dependencies
 # e.g. SET( ${PROJECT_NAME}_DEPENDS "Marlin MarlinUtil LCIO GEAR CLHEP GSL RAIDA ROOT" )
-SET( ${PROJECT_NAME}_DEPENDS "Marlin LCIO ROOT CLHEP GEAR GSL MarlinUtil " )
+SET( ${PROJECT_NAME}_DEPENDS "Marlin MarlinUtil LCIO GEAR ROOT" )
 
 # set default cmake build type to RelWithDebInfo
 # possible options are: None Debug Release RelWithDebInfo MinSizeRel
