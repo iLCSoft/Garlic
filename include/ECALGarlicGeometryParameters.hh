@@ -4,6 +4,7 @@
 #define MAX_NUMBER_OF_LAYERS 200
 
 #include <cmath>
+#include <algorithm> // needed for sort / gcc 4.4
 #include <UTIL/CellIDDecoder.h>
 
 #include "ECALGarlicExtendedObjects.hh"
