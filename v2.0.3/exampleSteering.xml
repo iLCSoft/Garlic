@@ -1,0 +1,190 @@
+<marlin>
+
+ <execute>
+  <processor name="MyMaterialDB"/>
+  <processor name="EmcPreCluster"/>
+  <processor name="EmcGarlic"/> 
+  <processor name="MyLCIOOutputProcessor"/>
+ </execute>
+    
+ <global>
+  <parameter name="LCIOInputFiles">
+/data_ilc/flc/jeans/diffEcals/ILD00_A_gamma_10GeV_reco_noGarlic.000.slcio
+  </parameter>
+  <parameter name="GearXMLFile" value="gearFiles/ILD00_A.xml"/>
+  <parameter name="MaxRecordNumber" value="500"/>
+  <parameter name="SkipNEvents" value="0"/>
+  <parameter name="SupressCheck" value="false"/>
+ </global>
+
+ <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+  <parameter name="LCIOOutputFile" type="string" >
+output_single_gamma_from_amjad_garlicV20.slcio
+  </parameter>
+  <parameter name="SplitFileSizekB" type="int" value="1992294"/>
+ </processor>
+
+ <processor name="MyMaterialDB" type="MaterialDB">
+  <!--Material DB builder...-->
+  <parameter name="UseExtrapolations" type="int" value="1"/>
+  <parameter name="UseMaterials" type="int" value="1"/>
+ </processor>
+
+ <!--######  EmcPreCluster ##########################################-->
+ <processor name="EmcPreCluster" type="ECALPreClustering">
+
+  <!-- input collections -->
+  <parameter name="EcalEndcapHitCollection"  type="string"> ECALEndcap </parameter>
+  <parameter name="EcalBarrelHitCollection"  type="string"> ECALBarrel </parameter>
+  <parameter name="EcalOtherHitCollection"   type="string"> ECALOther </parameter>
+
+  <!-- algorithm parameters -->
+  <parameter name="DistanceCut" type="float">200. </parameter>
+  <parameter name="MinimumHits" type="int">5. </parameter>
+  <parameter name="Debug" type="int"> 0 </parameter>
+
+  <!-- output collection -->
+  <parameter name="EcalPreClusterCollection" type="string"> ECAL_PreClusters </parameter>
+ </processor>
+
+ <!--######  EmcGarlic ##########################################-->
+ <processor name="EmcGarlic" type="ECALGarlic">
+
+  <!--Talk a lot? (0-3)-->
+  <parameter name="DebugMode" type="int">0 </parameter>
+
+  <!-- input collections -->
+  <!--Name of PreCluster collection-->
+  <parameter name="EcalPreClusterCollection" type="string">ECAL_PreClusters </parameter>
+  <!--PreShower Hit collection name of ECAL Barrel-->
+  <parameter name="EcalBarrelPreShowerHitCollection" type="string">EcalBarrelPreShowerCollection </parameter>
+  <!--PreShower Hit collection name of ECAL Endcap-->
+  <parameter name="EcalEndcapPreShowerHitCollection" type="string">EcalEndcapPreShowerCollection </parameter>
+  <!--LDC track collection name-->
+  <parameter name="LDCTrackCollection" type="string">LDCTracks </parameter>
+  <!--MC Particle collection name-->
+  <parameter name="MCParticleCollection" type="string">MCParticle </parameter>
+
+  <!-- output collections -->
+  <!--collection name for the reconstructed particles-->
+  <parameter name="ParticleCollName" type="string">GARLIC_Photons </parameter>
+  <!--Name of Photon Cluster collection-->
+  <parameter name="EcalPhotonClusterCollection" type="string">ECAL_PhotonClusters </parameter>
+  <!--collection name of removed hits (near tracks)-->
+  <parameter name="RemovedHitsCollection" type="string">RemovedHits </parameter>
+
+  <!-- algorithm parameters -->
+  <!--Initialise HelixFit with MC particle momentum (1), or read from text file (2), or do nothing(0) -->
+  <parameter name="CheatTracks" type="int">0 </parameter>
+  <!--Factor applied to CellSize used for the maximal colecting distance.-->
+  <parameter name="DistanceFactor" type="double">1.41422 </parameter>
+  <!--Try to reintegrate PreShower Hits in PreClusters-->
+  <parameter name="IncludePreShowerHits" type="bool">true </parameter>
+  <!--Cuts applied on the NN decision-->
+  <parameter name="MLPCutsBarrel" type="FloatVec">-0.23 -0.3 -0.4 -0.2 -0.1 -0.2 -0.25 -0.2 -0.4 0 -0.3 0.1 0.5  </parameter>
+  <!--Cuts applied on the NN decision-->
+  <parameter name="MLPCutsEndcap" type="FloatVec">-0.6 -0.5 -0.5 -0.3 -0.2 -0.35 -0.4 0 0 0 0.1 -0.3 0.4  </parameter>
+  <!--Upper Energy cut to define a satellite cluster-->
+  <parameter name="MaxSatelliteEnergy" type="float">3 </parameter>
+  <!--Merge satellite clusters?-->
+  <parameter name="MergeSatellites" type="bool">true </parameter>
+  <!--Minimum energy form a cluster-->
+  <parameter name="MinClusterEnergy" type="float">0.15 </parameter>
+  <!--Minimum Number of Hits to form a cluster-->
+  <parameter name="MinClusterHits" type="int">5 </parameter>
+  <!--Minimum number of hits after 10X0.-->
+  <parameter name="MinHits10X0" type="int">5 </parameter>
+  <!--Minimum number of hits to accept a seed.-->
+  <parameter name="MinHitsForSeeding" type="int">4 </parameter>
+  <!--Lower Energy cut to define a satellite cluster-->
+  <parameter name="MinSatelliteEnergy" type="float">0.15 </parameter>
+  <!--Should remove clusters that do not pass MLP cuts?-->
+  <parameter name="RejectClustersByMLPCut" type="bool">true </parameter>
+  <!--Should remove Hits near extrapolated tracks to reject pions?-->
+  <parameter name="RemoveHitsNearToTracks" type="bool">true </parameter>
+  <!--In order to correct for the influence of the magnetic field the shower direction in x and y will be corrected by this factor when following a cluster over the cable gap between barrel and endcap-->
+  <parameter name="XYGapTransitFactor" type="float">1 </parameter>
+
+  <!-- geometrical information -->
+  <!--Size of the fiber in mm-->
+  <parameter name="FiberSize" type="float">0.95 </parameter>
+  <!--Size of the guard ring in mm-->
+  <parameter name="FiberSizeModule" type="float">2 </parameter>
+  <!--Offset ECAL Layers to match reconstructed hits-->
+  <parameter name="FirstBarrelLayerOffset" type="float">-5.14 </parameter>
+  <!--Offset ECAL Layers to match reconstructed hits-->
+  <parameter name="FirstEndcapLayerOffset" type="float">-0.4 </parameter>
+  <!--Size of the guard ring in mm-->
+  <parameter name="GuardringSize" type="float">0.5 </parameter>
+  <!--Number of cells along one edge of a square wafer-->
+  <parameter name="NCellsPerWafer" type="int">18 </parameter>
+  <!--Number of Iterations to apply the neighbpuring criterion.-->
+  <parameter name="NIterations" type="int">3 </parameter>
+  <!--Number of ECAL pseudo layers used for projecting to obtain a seed, typically equivalent to 5 X0.-->
+  <parameter name="NLayersForSeeding" type="int">8 </parameter>
+  <!--Thickness of PassiveMaterial(PCB etc.) in a layer that is not the absorber-->
+  <parameter name="PCBThickness" type="float">2.15 </parameter>
+  <!--Thickness of Silicon defined as layerThickness - absorberThickness - ThicknessOfPassiveMaterial(PCB etc.)-->
+  <parameter name="SiliconThickness" type="float">1 </parameter>
+
+
+  <!-- energy calculation parameters -->
+
+  <!--alpha parameter for barrel-->
+  <parameter name="AlphaBarrel" type="FloatVec">6.10498 0.89989 -1.80243 21.0402 1.22358 2.26219 -2.52431 7.7025  </parameter>
+  <!--alpha parameter for endcap-->
+  <parameter name="AlphaEndcap" type="FloatVec">6.29132 0.894917 -4.84368 26.6329 1.03308 2.30324 -0.16176 8.90058  </parameter>
+  <!--Try to correct for wafer and alveola gaps or alveola gaps only?-->
+  <parameter name="ApplyGapCorrection" type="bool">true </parameter>
+  <!--beta parameter for barrel-->
+  <parameter name="BetaBarrel" type="FloatVec">2.25252 0.744998 0.587399  </parameter>
+  <!--beta parameter for endcap-->
+  <parameter name="BetaEndcap" type="FloatVec">2.36623 0.808524 0.595689  </parameter>
+  <!--gamma parameter for barrel-->
+  <parameter name="GammaBarrel" type="FloatVec">0.025213 0.260046 0.37262 6.38886e-05  </parameter>
+  <!--gamma parameter for endcap-->
+  <parameter name="GammaEndcap" type="FloatVec">0.0260573 0.271003 0.294263 2.90116e-05  </parameter>
+  <!--delta parameter for barrel-->
+  <parameter name="DeltaBarrel" type="FloatVec">0.0397137 0.169812 0.0325349 0.289825 0.000719802  </parameter>
+  <!--delta parameter for endcap-->
+  <parameter name="DeltaEndcap" type="FloatVec">0.0415537 0.178909 0.0335461 0.320522 0.00076804  </parameter>
+  <!--lambda parameter for barrel-->
+  <parameter name="LambdaBarrel" type="FloatVec">2.25788 0.620427 8.48215e-07 0.382175  </parameter>
+  <!--lambda parameter for endcap-->
+  <parameter name="LambdaEndcap" type="FloatVec">1.50388 0.817268 5.78497e-09 0.584671  </parameter>
+  <!--Include correction for longitudinal leakage?-->
+  <parameter name="CorrectLeakage" type="bool">false </parameter>
+  <!--Include correction for phi?-->
+  <parameter name="CorrectPhi" type="bool">true </parameter>
+  <!--Include correction for theta?-->
+  <parameter name="CorrectTheta" type="bool">true </parameter>
+  <!--Phie parameters for Phie function to estimate par0 of Phie function for Phieta correction-->
+  <parameter name="PhiCorrPar0" type="FloatVec">2.22114 -0.596095 -4.85018e-07 0.000244816 -4.98479 0.00257302  </parameter>
+  <!--Phie parameters for Phie function to estimate par0 of Phie function for Phieta correction-->
+  <parameter name="PhiCorrPar1" type="FloatVec">393.864 950.289 3.12544e-05 0.00861194  </parameter>
+  <!--Phie parameters for Phie function to estimate par1 of Phie function for Phieta correction-->
+  <parameter name="PhiCorrPar2" type="FloatVec">1535.69 163601 -1.54682e-05 0.163612  </parameter>
+  <!--The parameters for the function to estimate par0 of the function for theta correction-->
+  <parameter name="ThetaCorrPar0" type="FloatVec">-0.0241597 -0.000310652  </parameter>
+  <!--The parameters for the function to estimate par1 of the function for theta correction-->
+  <parameter name="ThetaCorrPar1" type="FloatVec">-0.0251202 0.000125312  </parameter>
+  <!--The parameters for the function to go from energy deposit to GeV value-->
+  <parameter name="ToGeVParameters" type="FloatVec">0.0447401 1.18857 -0.00181962 0.000100757  </parameter>
+  <!--The parameters_EC for the function to go from energy deposit to GeV value-->
+  <parameter name="ToGeVParameters_EC" type="FloatVec">0.0444222 1.20706 -0.0017723 9.47984e-05  </parameter>
+  <!--f1 parameter for barrel-->
+  <parameter name="f1Barrel" type="FloatVec">0.489788 -0.000288782  </parameter>
+  <!--f1 parameter for endcap-->
+  <parameter name="f1Endcap" type="FloatVec">0.495716 -0.000273418  </parameter>
+  <!--f2 parameter for barrel-->
+  <parameter name="f2Barrel" type="FloatVec">0.490176 -7.35199e-05  </parameter>
+  <!--f2 parameter for endcap-->
+  <parameter name="f2Endcap" type="FloatVec">0.491147 -0.000330898  </parameter>
+  <!--par0f-->
+  <parameter name="par0_f" type="FloatVec">34.6695 0.354309 -0.00095874  </parameter>
+  <!--par1f-->
+  <parameter name="par1_f" type="FloatVec">7.19559 0.0453275 -0.00010602  </parameter>
+
+ </processor>
+
+</marlin>
