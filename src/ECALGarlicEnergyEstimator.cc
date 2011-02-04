@@ -52,7 +52,7 @@ ECALGarlicEnergyEstimator::ECALGarlicEnergyEstimator(ECALGarlicAlgorithmParamete
   par0_f = new TF1("par0_f","pol2",0,160);
   l_corr = new TF1("l_corr","[2]/2*(TMath::TanH(([0]-x)/[1])-1)",0.,30.);
 
-  for (uint i=0; i<_algoParams->GetPar0FPars().size(); i++) {
+  for (unsigned int i=0; i<_algoParams->GetPar0FPars().size(); i++) {
     par0_f->SetParameter(i, _algoParams->GetPar0FPars()[i]);
     par1_f->SetParameter(i, _algoParams->GetPar1FPars()[i]);
   }
@@ -136,17 +136,17 @@ double ECALGarlicEnergyEstimator::EstimateEnergyByMix(ClusterParameters *clusPar
   bool isbarrel =  (zone==1 || zone==3);
 
   if (isbarrel) {
-    for (uint i=0; i<_algoParams->GetAlphaParsBarrel().size(); i++) _alp->SetParameter(i, _algoParams->GetAlphaParsBarrel()[i]);
-    for (uint i=0; i<_algoParams->GetBetaParsBarrel().size(); i++) _bet->SetParameter(i, _algoParams->GetBetaParsBarrel()[i]);
-    for (uint i=0; i<_algoParams->GetGammaParsBarrel().size(); i++) _g->SetParameter(i, _algoParams->GetGammaParsBarrel()[i]);
-    for (uint i=0; i<_algoParams->GetDeltaParsBarrel().size(); i++) _d->SetParameter(i, _algoParams->GetDeltaParsBarrel()[i]);
-    for (uint i=0; i<_algoParams->GetLambdaParsBarrel().size(); i++) _lam->SetParameter(i, _algoParams->GetLambdaParsBarrel()[i]);
+    for (unsigned int i=0; i<_algoParams->GetAlphaParsBarrel().size(); i++) _alp->SetParameter(i, _algoParams->GetAlphaParsBarrel()[i]);
+    for (unsigned int i=0; i<_algoParams->GetBetaParsBarrel().size(); i++) _bet->SetParameter(i, _algoParams->GetBetaParsBarrel()[i]);
+    for (unsigned int i=0; i<_algoParams->GetGammaParsBarrel().size(); i++) _g->SetParameter(i, _algoParams->GetGammaParsBarrel()[i]);
+    for (unsigned int i=0; i<_algoParams->GetDeltaParsBarrel().size(); i++) _d->SetParameter(i, _algoParams->GetDeltaParsBarrel()[i]);
+    for (unsigned int i=0; i<_algoParams->GetLambdaParsBarrel().size(); i++) _lam->SetParameter(i, _algoParams->GetLambdaParsBarrel()[i]);
   } else {
-    for (uint i=0; i<_algoParams->GetAlphaParsEndcap().size(); i++) _alp->SetParameter(i, _algoParams->GetAlphaParsEndcap()[i]);
-    for (uint i=0; i<_algoParams->GetBetaParsEndcap().size(); i++) _bet->SetParameter(i, _algoParams->GetBetaParsEndcap()[i]);
-    for (uint i=0; i<_algoParams->GetGammaParsEndcap().size(); i++) _g->SetParameter(i, _algoParams->GetGammaParsEndcap()[i]);
-    for (uint i=0; i<_algoParams->GetDeltaParsEndcap().size(); i++) _d->SetParameter(i, _algoParams->GetDeltaParsEndcap()[i]);
-    for (uint i=0; i<_algoParams->GetLambdaParsEndcap().size(); i++) _lam->SetParameter(i, _algoParams->GetLambdaParsEndcap()[i]);
+    for (unsigned int i=0; i<_algoParams->GetAlphaParsEndcap().size(); i++) _alp->SetParameter(i, _algoParams->GetAlphaParsEndcap()[i]);
+    for (unsigned int i=0; i<_algoParams->GetBetaParsEndcap().size(); i++) _bet->SetParameter(i, _algoParams->GetBetaParsEndcap()[i]);
+    for (unsigned int i=0; i<_algoParams->GetGammaParsEndcap().size(); i++) _g->SetParameter(i, _algoParams->GetGammaParsEndcap()[i]);
+    for (unsigned int i=0; i<_algoParams->GetDeltaParsEndcap().size(); i++) _d->SetParameter(i, _algoParams->GetDeltaParsEndcap()[i]);
+    for (unsigned int i=0; i<_algoParams->GetLambdaParsEndcap().size(); i++) _lam->SetParameter(i, _algoParams->GetLambdaParsEndcap()[i]);
   }
 
   double energy = 0;
