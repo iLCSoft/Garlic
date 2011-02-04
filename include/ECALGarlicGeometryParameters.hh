@@ -35,23 +35,23 @@ public:
   void Set_nCellsPerWafer (int   f) {_nCellsPerWafer=f;}
 
   void Set_positionBarrelLayer (float* f) {
-    for (uint i=0; i<MAX_NUMBER_OF_LAYERS; i++)
+    for (unsigned int i=0; i<MAX_NUMBER_OF_LAYERS; i++)
       _positionBarrelLayer[i]=f[i];
   }
   void Set_absThicknessBarrelLayer (float* f) {
-    for (uint i=0; i<MAX_NUMBER_OF_LAYERS; i++)
+    for (unsigned int i=0; i<MAX_NUMBER_OF_LAYERS; i++)
       _absThicknessBarrelLayer[i]=f[i];
   }
   void Set_absThicknessEndcapLayer (float* f) {
-    for (uint i=0; i<MAX_NUMBER_OF_LAYERS; i++)
+    for (unsigned int i=0; i<MAX_NUMBER_OF_LAYERS; i++)
       _absThicknessEndcapLayer[i]=f[i];
   }
   void Set_padSizeEcal (float* f) {
-    for (uint i=0; i<MAX_NUMBER_OF_LAYERS; i++)
+    for (unsigned int i=0; i<MAX_NUMBER_OF_LAYERS; i++)
       _padSizeEcal[i]=f[i];
   }
   void Set_positionEndcapLayer (float* f) {
-    for (uint i=0; i<MAX_NUMBER_OF_LAYERS; i++)
+    for (unsigned int i=0; i<MAX_NUMBER_OF_LAYERS; i++)
       _positionEndcapLayer[i]=f[i];
   }
 
