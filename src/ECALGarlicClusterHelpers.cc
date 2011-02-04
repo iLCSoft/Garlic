@@ -14,8 +14,6 @@ using namespace ECALGarlicConstants;
 
 #include <cmath>
 
-#include <math.h>
-
 //using namespace ECALGarlicAlgorithmParameters;
 
 using std::cout;
@@ -2316,28 +2314,28 @@ void ECALGarlicClusterHelpers::CalculatePhotonProbability(LCEvent *evt,
 
   double cosDiff = ((cog_byShape[0]*main_axes[0])+(cog_byShape[1]*main_axes[1])+(cog_byShape[2]*main_axes[2]))/(sqrt((cog_byShape[0]*cog_byShape[0])+(cog_byShape[1]*cog_byShape[1])+(cog_byShape[2]*cog_byShape[2]))*sqrt((main_axes[0]*main_axes[0])+(main_axes[1]*main_axes[1])+(main_axes[2]*main_axes[2])));
   
-  if( (!isnan(cosDiff)) && (std::isfinite(cosDiff)) )
+  if( (!std::isnan(cosDiff)) && (std::isfinite(cosDiff)) )
     clusPar->dirErr = cosDiff;
   else
     clusPar->dirErr = 0;
 
-  if( (!isnan(hit_density)) && (std::isfinite(hit_density)) )
+  if( (!std::isnan(hit_density)) && (std::isfinite(hit_density)) )
     clusPar->hitDensity = hit_density;
   else
     clusPar->hitDensity = 0;
-  if( (!isnan(en_density)) && (std::isfinite(en_density)) )
+  if( (!std::isnan(en_density)) && (std::isfinite(en_density)) )
     clusPar->enDensity = en_density;
   else
     clusPar->enDensity = 0;
-  if( (!isnan(eccentr)) && (std::isfinite(eccentr)) )
+  if( (!std::isnan(eccentr)) && (std::isfinite(eccentr)) )
     clusPar->Eccentricity = eccentr;
   else
     clusPar->Eccentricity = 1;
-  if( (!isnan(width)) && (std::isfinite(width)) )
+  if( (!std::isnan(width)) && (std::isfinite(width)) )
     clusPar->Width = width;
   else
     clusPar->Width = 0;
-  if( (!isnan(e_vol)) && (std::isfinite(e_vol)) )   
+  if( (!std::isnan(e_vol)) && (std::isfinite(e_vol)) )   
     clusPar->Volume = e_vol;
   else
     clusPar->Volume = 0;
@@ -2387,7 +2385,7 @@ void ECALGarlicClusterHelpers::CalculatePhotonProbability(LCEvent *evt,
   double seed_cosDiff = ((seed_cog_byShape[0]*seed_main_axes[0])+(seed_cog_byShape[1]*seed_main_axes[1])+(seed_cog_byShape[2]*seed_main_axes[2]))/(sqrt((seed_cog_byShape[0]*seed_cog_byShape[0])+(seed_cog_byShape[1]*seed_cog_byShape[1])+(seed_cog_byShape[2]*seed_cog_byShape[2]))*sqrt((seed_main_axes[0]*seed_main_axes[0])+(seed_main_axes[1]*seed_main_axes[1])+(seed_main_axes[2]*seed_main_axes[2])));
 
 
-  if( (!isnan(seed_cosDiff)) && (std::isfinite(seed_cosDiff)) )
+  if( (!std::isnan(seed_cosDiff)) && (std::isfinite(seed_cosDiff)) )
     clusPar->seedDirErr = seed_cosDiff;
   else
     clusPar->seedDirErr = 0;
