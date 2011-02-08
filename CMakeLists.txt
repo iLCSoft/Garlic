@@ -50,19 +50,6 @@ LINK_LIBRARIES( ${ROOT_LIBRARIES} )
 
 
 
-### DOCUMENTATION ###########################################################
-
-OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" OFF )
-
-IF( INSTALL_DOC AND EXISTS "${PROJECT_SOURCE_DIR}/doc/CMakeLists.txt" )
-    ADD_SUBDIRECTORY( ./doc )
-ELSE()
-    MESSAGE( STATUS "INSTALL_DOC set to OFF" )
-    SET( INSTALL_DOC OFF )
-ENDIF()
-
-
-
 ### LIBRARY #################################################################
 
 # definitions to pass to the compiler
@@ -71,7 +58,7 @@ ADD_DEFINITIONS( "-Wno-long-long" )
 
 # include directories
 INCLUDE_DIRECTORIES( ./include )
-INSTALL_DIRECTORY( ./include DESTINATION . FILES_MATCHING PATTERN "*.h" )
+#INSTALL_DIRECTORY( ./include DESTINATION . FILES_MATCHING PATTERN "*.h" )
 
 # add library
 AUX_SOURCE_DIRECTORY( ./src library_sources )
