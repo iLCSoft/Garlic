@@ -14,9 +14,6 @@
 #include "Rtypes.h"
 #include <TMVA/Reader.h>
 
-#include <ClusterParameters.hh>
-#include <MCPhoton.hh>
-
 #include "ECALGarlicExtendedObjects.hh"
 
 #include "ECALGarlicGeometryHelpers.hh"
@@ -32,66 +29,77 @@ class lcio::CalorimeterHit;
 class lcio::ClusterImpl;
 class lcio::Track;
 
-class ECALGarlicClusterHelpers;
 class ECALGarlicCluster;
-class ECALGarlicAlgorithmParameters;
-class ECALGarlicGeometryParameters;
-class ECALGarlicEnergyEstimator;
 
-class ECALGarlic : public marlin::Processor {
-  
+class ExtendedCluster2;
+class ExtendedHit2;
+
+class ECALGarlic : public marlin::Processor, public ECALGarlicGeometryHelpers {
   
 public:
   
   virtual marlin::Processor * newProcessor() { return new ECALGarlic; }
   
   ECALGarlic();
+  ~ECALGarlic();
   
-  virtual void init();
-  virtual void processRunHeader(LCRunHeader * run);
-  virtual void processEvent(LCEvent * evt);
-  virtual void check(LCEvent * evt);
-  virtual void end();
+  void init();
+  void processRunHeader(LCRunHeader * run);
+  void processEvent(LCEvent * evt);
+  void check(LCEvent * evt);
+  void end();
   
 private:
 
+  void setup();
   void printMrGarlic();
   void setUpGeometry();
 
-  void AddDeeperHits(ExtendedHit *myHit, vec3 *clusterDir, vector<ExtendedHit* > &myCluster, ExtendedCluster &preCluster);
-
-  bool RejectByMLPCut(ExtendedCluster *myCluster);
-
   // main algorithm functions
-  void PreparePreClusters(LCEvent *evt, vector<ExtendedCluster* > &preClusVec);
+  void PreparePreClusters(LCEvent *evt, vector<ExtendedCluster2* > &preClusVec);
   void PrepareTracks(const LCEvent *evt, vector<ExtendedTrack* > &trackVec);
+  void PrepareMCTracks(vector<ExtendedTrack* > &trackVec);
 
+  vector < ExtendedTrack* > selectNearbyTracks(ExtendedCluster2* preCluster,  vector <ExtendedTrack* >* trackVec);
+
+  void RemoveElectronHits(vector < pair < ExtendedTrack*, ExtendedCluster2* > > electrons, ExtendedCluster2* preClus );
   void RemoveHitsNearExtrapolatedTracks(LCEvent *evt,
 					vector<ExtendedTrack* > &trackVec, 
-					vector<ExtendedCluster* > &preClusVec, 
-					map<ExtendedTrack*,
-					map<int,vector<ExtendedHit*> > > *allRemovedHits);
+					vector<ExtendedCluster2* > &preClusVec);
 
-  void ProjectForSeeding(ExtendedCluster &preClus, vector<vec3> &possibleSeeds, LCCollectionVec *seed_col);
+  void cleanup(vector<ExtendedCluster2* > &preClusVec);
+  void cleanup(vector<ExtendedTrack* > &trackVec);
+  void addCollToEvent(LCCollection* col, string colname, LCEvent* evt);
 
-  void WriteClusters(LCEvent *evt, map<int, vector<ExtendedCluster* > *> *clus_map);
-
-  void cleanup(map<int,vector<ExtendedCluster* > *> *clusMap, vector<ExtendedCluster* > &preClusVec, vector<ExtendedTrack* > &trackVec);
 
   //----------------------------------------------------
 
-
   // Collection names
   string _mcParticleCollectionName;
-  string _ecalBarrelPreShowerHitCollectionName;
-  string _ecalEndcapPreShowerHitCollectionName;
-  string _ecalPhotonClusterCollectionName;
+  string _simHitCaloHitRelationCollectionName;
+
+  string _ecalPreClusterCollectionName;
   string _LDCTrackCollectionName;
-  string _removedHitsCollectionName;
+  string _TPCTrackCollectionName;
   string _particleCollectionName;
 
+  string _ecal_ps_col_name;
+
+  string _electronCollName;
+  string _trkExtrapCollName;
+  string _seedCollName;
+  string _coreCollName;
+  string _clusterCollName;
+  string _clparsCollName;
+  string _clusterParRelCollName;
+  string _seedCoreRelCollName;
+  string _seedClusterRelCollName;
+  string _removedHitsCollectionName;
+    
   // collections
   LCCollection *_mcParticleColl;
+
+  LCCollectionVec* _track_extrap_col;
 
   float _thicknessBarrelLayer[MAX_NUMBER_OF_LAYERS];
   float _thicknessEndcapLayer[MAX_NUMBER_OF_LAYERS];
@@ -103,67 +111,35 @@ private:
   int _nPhotonClusters;
   int _nOtherClusters;
 
-  ECALGarlicAlgorithmParameters* _garPars;
-  ECALGarlicGeometryParameters* _geomPars;
-
-  ECALGarlicGeometryHelpers* _geomHelpers;
-
-  ECALGarlicClusterHelpers* _clusterHelpers;
-
   ECALGarlicCluster* _clusterer;
 
-  ECALGarlicEnergyEstimator* _energyEstimator;
-
-
   // parameters
-  std::string _x_ecalPreClusterCollectionName;
+  int   _x_debug;
 
-  int    _x_nLayersForSeeding;
-  bool   _x_correctPhi;
-  bool   _x_correctTheta;
-  int    _x_debug;
-  float  _x_xy_gap_transit_factor;
-  int    _x_nHitsMin;
-  float  _x_minEnergy;
-  double _x_distanceFactor;
-  int    _x_minHits10X0;
+  bool  _x_removeHitsNearTracks;
+  bool  _x_cheatTracks;
+
+  int   _x_nLayersForSeeding;
+  int   _x_minHitsForSeeding;
+  float _x_seedHitEnergyCut;
+  float _x_seedEnergyCut;
+  float _x_seedDistanceCut;
+
+
+  int   _x_nlayersSection1;
+  int   _x_maxHoleSection1;
+  int   _x_maxHoleSection2;
+
+  float _x_mergeTouchFrac;
+  int   _x_initialLayerSeparation;
+
+
   int    _x_nIterations;
-  float  _x_maxSatelliteEn;
-  float  _x_minSatelliteEn;
-  bool   _x_applyGapCorrection;
-  bool   _x_removeHitsNearTracks;
-  bool   _x_rejectMLP;
-  bool   _x_mergeSatellites;
-  int    _x_cheatTracks;
-  bool   _x_includePreShower;
-  int    _x_minHitsForSeeding;
-  bool   _x_correctLeakage;
 
-  vector <float> _x_toGeVParameters;
-  vector <float> _x_toGeVParameters_EC;
-  vector <float> _x_mlpCuts_B;
-  vector <float> _x_mlpCuts_EC;
-  vector <float> _x_corrThParameters0;
-  vector <float> _x_corrThParameters1;
-  vector <float> _x_corrPhiParameters0;
-  vector <float> _x_corrPhiParameters1;
-  vector <float> _x_corrPhiParameters2;
-  vector <float> _x_alp_params_B;
-  vector <float> _x_alp_params_EC;
-  vector <float> _x_bet_params_B;
-  vector <float> _x_bet_params_EC;
-  vector <float> _x_g_params_B;
-  vector <float> _x_g_params_EC;
-  vector <float> _x_d_params_B;
-  vector <float> _x_d_params_EC;
-  vector <float> _x_lam_params_B;
-  vector <float> _x_lam_params_EC;
-  vector <float> _x_f1_params_b;
-  vector <float> _x_f2_params_b;
-  vector <float> _x_f1_params_e;
-  vector <float> _x_f2_params_e;
-  vector <float> _x_par0_f_params;
-  vector <float> _x_par1_f_params;
+  bool   _x_rejectMLP;
+  vector <float> _x_mlpCuts;
+
+  float _x_trackWindowVeto;
 
 
   double _x_rOfBarrel;
@@ -185,15 +161,23 @@ private:
   float  _x_guardringSize;
   float  _x_fiberSize;
   float  _x_fiberSizeModule;
+  float _x_absorberX0;
   int    _x_symmetry;
   int    _x_nPseudoLayers;
   int    _x_nCellsPerWafer;
+  int    _x_nBarEcalLayers;
+  int    _x_nEndEcalLayers;
 
-  std::vector<vec3> _x_barrelStaveDir;
+  std::vector< std::vector < float > > _x_barrelStaveDir;
 
   CellIDDecoder<CalorimeterHit>* _x_defaultDecoder;
 
+  bool _geomSetup;
 
+  TFile* _fhistos;
+  string _histFileName;
+  int _nSaveHist;
+  enum {MAXSAVEHIST=-1};
 
 };
 

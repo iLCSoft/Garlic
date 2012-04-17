@@ -11,18 +11,22 @@
 #include <marlin/Processor.h>
 
 using namespace lcio;
-using namespace std;
+using std::cout;
+using std::endl;
+using std::vector;
+using std::multimap;
+using std::string;
 
 class lcio::CalorimeterHit;
 
 class ECALPreClustering : public marlin::Processor {
-
 
  public:
 
   virtual marlin::Processor * newProcessor() { return new ECALPreClustering; }
 
   ECALPreClustering();
+  ~ECALPreClustering();
 
   virtual void init();
   virtual void processRunHeader(LCRunHeader * run);
@@ -30,24 +34,17 @@ class ECALPreClustering : public marlin::Processor {
   virtual void check(LCEvent * evt);
   virtual void end();
 
- private:
+ protected:
 
   // simple extended CalorimeterHit that knows if it is clustered
-
   struct ExtendedHit {
-
     ExtendedHit() : hit(0), isClustered(0) {}
     ~ExtendedHit() { hit = 0; isClustered = 0; }
-
     CalorimeterHit *hit;
     bool isClustered;
-
     static bool higherEnergy(const ExtendedHit *a, const ExtendedHit *b)
     { return ((a->hit)->getEnergy() > (b->hit)->getEnergy()); }
-
-
   };
-
   
   // algorithm functions
   float GetDistance(float *a,float *b);
@@ -58,11 +55,8 @@ class ECALPreClustering : public marlin::Processor {
 
 
   // Collection names
-  string _ecalEndcapHitCollectionName;
-  string _ecalBarrelHitCollectionName;
-  string _ecalOtherHitCollectionName;
-  string _ecalPreClusterCollectionName;
- 
+  std::string _ecalPreClusterCollectionName;
+  StringVec _ecalHitCollNames;
 
   // some parameters
   int _nEvents;
@@ -71,6 +65,10 @@ class ECALPreClustering : public marlin::Processor {
   float _distanceCut;
   int _minHits;
   int _debug;
+
+  string _decodeString;
+
+
 };
 
 #endif
