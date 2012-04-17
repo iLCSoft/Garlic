@@ -4,496 +4,715 @@
 using std::cout;
 using std::endl;
 
+#include <algorithm>
+
 #include "TVector3.h"
 #include "TF1.h"
-#include "ECALGarlicClusterHelpers.hh"
+#include "TH2F.h"
+#include "TH2I.h"
+#include "TGraph.h"
+
+#include <IMPL/CalorimeterHitImpl.h>
+
+//#include "ECALGarlicClusterHelpers.hh"
 #include "ECALGarlicAlgorithmParameters.hh"
+#include "ECALGarlicGeometryParameters.hh"
 #include "ECALGarlicGeometryHelpers.hh"
 
+#include "ECALGarlicExtendedCluster.hh"
+#include "ECALGarlicExtendedHit.hh"
 
-void ECALGarlicCluster::Cluster(ExtendedCluster &preCluster, vector<vec3> &possibleSeeds, vector<ExtendedCluster* > &clusters,vector<ExtendedTrack*> tracks )
-{
+//std::vector <CalorimeterHit*> ECALGarlicCluster::getSeeds(ExtendedCluster2* preClus) {
+std::map <CalorimeterHit*, bool> ECALGarlicCluster::getSeeds(ExtendedCluster2* preClus) {
 
-  vector<vec3>::iterator seedIt;
-  for(seedIt=possibleSeeds.begin();seedIt!=possibleSeeds.end();seedIt++) {
-    vec3 seed=*seedIt;
+  float energyCutMip = ECALGarlicAlgorithmParameters::Instance().GetSeedHitEnergyCut();
+  float seedThresholdMIP = ECALGarlicAlgorithmParameters::Instance().GetSeedEnergyCut();
+  float cutoffdist = ECALGarlicAlgorithmParameters::Instance().GetSeedDistanceCut();
+  int maxpseulayer = ECALGarlicAlgorithmParameters::Instance().GetSeedNLayers();
 
-    // 1.) to find nearest hit to seed : REMOVED
+  const int maxseed=300;
 
-    if(_algoParams->GetDebug()>2)
-      cout << "The seed is at (" << seed.x << ", " << seed.y << ", " << seed.z << ")" << endl;
+  //  std::vector <CalorimeterHit*> seeds;
+  std::map <CalorimeterHit*, bool> seeds;
 
-    vector<ExtendedHit* > myCluster;
+  std::pair < TH2F*, TH2I* > histos = preClus->GetProjectionHistos( energyCutMip, maxpseulayer );
+  TH2F* henergy = histos.first;
+  TH2I* hhits = histos.second;
 
-    // 2.) Build central cluster core
-    vec3 clusterDirection;
-    clusterDirection.x=seed.x;
-    clusterDirection.y=seed.y;
-    clusterDirection.z=seed.z;
-    AddCore(myCluster, &seed, preCluster, &clusterDirection);
-
-    // 3.) the core is built so start clustering neighbours
-    if(myCluster.size()==0) // no core found, check next seed
-      continue;
-    if(_algoParams->GetDebug()>2) cout  << myCluster.size() << " hits in core" << endl;
-
-    BuildClusterFromNeighbours(myCluster, &clusterDirection, preCluster);
-    if(_algoParams->GetDebug()>2) cout << "Clusterd " << myCluster.size() << " hits" << endl;
-
-    if(int(myCluster.size())<_algoParams->GetNHitsMin()) {
-      _clusterHelper->FreeHits(myCluster);
-      if(_algoParams->GetDebug()>1)
-	cout << "Not enough hits in cluster!" << endl;
-      continue;
-    }
-    if(_algoParams->GetDebug()>1)
-      cout << "Finished clustering of " << myCluster.size() << " hits, now checking cluster criteria" << endl;
-    
-    ExtendedCluster *aRealCluster = new ExtendedCluster;
-    aRealCluster->hitVec=myCluster;
-    aRealCluster->seededFrom=seed;
-    aRealCluster->PreCluster=&preCluster;
-    aRealCluster->location=preCluster.location;
-    double En_a=0;
-    int nHits_a=aRealCluster->hitVec.size();
-    for(int hit_i=0;hit_i<nHits_a;hit_i++) {
-      //int layer = (((aRealCluster->hitVec[hit_i])->hit)->getCellID0() >> 24)+1;
-      //if(((aRealCluster->hitVec[hit_i])->preShower!=0))
-      En_a+=(((aRealCluster->hitVec[hit_i])->hit)->getEnergy());
-      ((aRealCluster->hitVec[hit_i])->cluster) = (aRealCluster);
-    }
-    aRealCluster->rawEn=En_a;
-    
-    bool isReal = _clusterHelper->CheckClusterCriteria(aRealCluster,tracks );
-    if(isReal) {   // build an ExtendedCluster from it
-      
-      clusters.push_back(aRealCluster);
-      sort(clusters.begin(),clusters.end(),ExtendedCluster::higherRawEnergy);
-    }
-    else {
-      _clusterHelper->FreeHits(aRealCluster);
-      delete aRealCluster;      
-      continue;
-    }
+  if (!henergy) {
+    return seeds;
   }
-  if(_algoParams->GetDebug()>1) {
-    if(clusters.size()>0) {
-      cout << "Found " << clusters.size() << " clusters from " << possibleSeeds.size() << " seeds" << endl;
-      for(seedIt=possibleSeeds.begin();seedIt!=possibleSeeds.end();seedIt++) {
-	vec3 seed=*seedIt;
-	cout << "at " << seed.x << ", " << seed.y << ", " << seed.z << ")" << endl;
+
+  TString blah;
+
+  //  if (henergy && hhits && _fhistos) {
+
+  if (_fhistos) _fhistos->cd();
+
+  if (_hnn!="blah") blah="_"+_hnn+"_";
+  else blah="_n_";
+  blah+="nhits";
+  blah+=preClus->getHits()->size();
+  blah+="_";
+  blah+=_nSaveHist+1;
+    
+  henergy = (TH2F*) henergy->Clone("hen"+blah);
+  henergy->SetNameTitle("hen"+blah, "hen"+blah);
+
+  hhits = (TH2I*) hhits->Clone("hhit"+blah);
+  hhits->SetNameTitle("hhit"+blah, "hhit"+blah);
+
+  // need to clone the histos and rebin them to cell size (originally they were 1mm)
+  float cellsize = ECALGarlicGeometryParameters::Instance().Get_padSizeEcal()[0];
+  int ics = int(cellsize);
+
+  henergy->Rebin2D(ics, ics);
+  hhits->Rebin2D(ics, ics);
+
+  std::vector < std::pair < int, int > > seedCells;
+
+  seedCells.clear();
+
+  // find highest energy bin
+  int maxbin = henergy->GetMaximumBin();
+  float maxen = henergy->GetBinContent( maxbin );
+
+  int iseed=0;
+  float seedXvec[maxseed]={0};
+  float seedYvec[maxseed]={0};
+
+  int ibadseed=0;
+  float badseedXvec[maxseed]={0};
+  float badseedYvec[maxseed]={0};
+
+  //  while (maxen>seedThresholdMIP ) {
+  while (maxen>=energyCutMip) {
+
+    // look at 3x3 neighbouring bins, get COG position
+    int binx(0); int biny(0);
+    int dummy;
+    henergy->GetBinXYZ(maxbin, binx, biny, dummy);
+
+    float cogx(0);
+    float cogy(0);
+    float toten(0);
+
+    for (int ix=-1; ix<=1; ix++) {
+      for (int iy=-1; iy<=1; iy++) {
+	float en = henergy->GetBinContent(binx+ix, biny+iy);
+	cogx+= en*henergy->GetXaxis()->GetBinCenter(binx+ix);
+	cogy+= en*henergy->GetYaxis()->GetBinCenter(biny+iy);
+	toten+=en;
       }
     }
-  }
-}
+    cogx/=toten;
+    cogy/=toten;
 
-void ECALGarlicCluster::AddCore(vector<ExtendedHit* > &aCluster, vec3 *mySeed, ExtendedCluster &preCluster, vec3 *clusterDir) {  
-  int _n_ly_10X0=16;
-  int _n_ly_hole_cut=20;// This is actually not 10X0 anymore but rather the second stack
-  bool no2ndHit=true;
-  bool hole_after_cut=false;
-  bool continueAfterGapJump=false;
-  int gapJumpTo=0;
-  vec3 afterJump;
-  TVector3 dir(mySeed->x,mySeed->y,mySeed->z);
-  double Theta = dir.Theta();
+    // look for cells within some distance of this position
+    int windowsize = int ( 1.5 * cutoffdist / henergy->GetXaxis()->GetBinWidth(1) );
 
-  for(int lay=0;lay<_geomParams->Get_nPseudoLayers();lay++) {
+    float seed_en(0);
+    float seed_rms(0);
+    float seed_rmsX(0);
+    float seed_rmsY(0);
+    float seed_x(0);
+    float seed_y(0);
+    int seed_nhits(0);
+    
+    for (int ix=-windowsize; ix<=windowsize; ix++) {
+      for (int iy=-windowsize; iy<=windowsize; iy++) {
 
-    if(lay>(_algoParams->GetNLayersForSeeding()+1) && no2ndHit) {
-      if(_algoParams->GetDebug()>2) cout << "No 2nd hit until layer " << (_algoParams->GetNLayersForSeeding()+1) << ", cancelling search for core" << endl;
-      _clusterHelper->FreeHits(aCluster);
-      break;
+	float x = henergy->GetXaxis()->GetBinCenter(binx+ix);
+	float y = henergy->GetYaxis()->GetBinCenter(biny+iy);
+
+	float en = henergy->GetBinContent(binx+ix, biny+iy);
+
+	float dx = cogx - x;
+	float dy = cogy - y;
+
+	float dist = sqrt( pow(dx, 2) + pow (dy, 2) );
+	if (dist>cutoffdist) continue;
+
+	seed_en+=en;
+	seed_nhits+= (int) hhits->GetBinContent(binx+ix, biny+iy);
+
+	seed_x+=x*en;
+	seed_y+=y*en;
+
+	seed_rms+=pow(en*dist, 2);
+	seed_rmsX+=pow(en*dx, 2);
+	seed_rmsY+=pow(en*dy, 2);
+
+	seedCells.push_back ( std::pair <int, int> (binx+ix, biny+iy) );
+
+      }
     }
-    if(lay>_n_ly_10X0 && aCluster.size()<((unsigned int) _algoParams->GetMinHits10X0())) { // have minimum 4 hits after 10X0
-      if(_algoParams->GetDebug()>2) cout << "Not enough hits in 10X0, cancelling search for core" << endl;
-      _clusterHelper->FreeHits(aCluster);
-      break;
-    }
+    seed_rms=sqrt(seed_rms);
+    seed_rms/=seed_en;
 
-    if(_algoParams->GetDebug()>2)
-      cout << "Following cluster from: " << mySeed->x << ", " << mySeed->y << ", " << mySeed->z << "(seed) for " << lay << " layers" << endl;
+    seed_rmsX=sqrt(seed_rmsX);
+    seed_rmsX/=seed_en;
 
-    bool gapHoleVeto=false;
-    gapJumpTo=0;
-    vec3 next_search_spot=_clusterHelper->FollowClusterDirection(mySeed,lay,clusterDir,preCluster.location,gapHoleVeto,gapJumpTo);
-    if(gapHoleVeto) {
-      if (_algoParams->GetDebug()>0) cout << "Couldn't bridge gap with layer " << lay << endl;
-      continue;
-    }
-    if(gapJumpTo>0) {
-      continueAfterGapJump=true;
-      afterJump=next_search_spot;
-      if(_algoParams->GetDebug()>2) cout << "Will continue after gap jump..." << endl;
-      break;
+    seed_rmsY=sqrt(seed_rmsY);
+    seed_rmsY/=seed_en;
+
+    seed_x/=seed_en;
+    seed_y/=seed_en;
+
+    bool goodSeed = seed_nhits>=ECALGarlicAlgorithmParameters::Instance().GetSeedMinHits() && toten>=seedThresholdMIP ;
+
+    float pos[3];
+    preClus->GetGlobalPositionFromLocal(seed_x, seed_y, pos);
+
+    CalorimeterHitImpl* a_seed=new CalorimeterHitImpl();
+    a_seed->setEnergy(seed_en);
+    a_seed->setPosition(pos);
+    seeds[a_seed] = goodSeed;
+
+    if (goodSeed) {
+      if (iseed<maxseed) {
+	seedXvec[iseed]=seed_x;
+	seedYvec[iseed]=seed_y;
+	iseed++;
+      } else {
+	cout << "WARNING, too many seeds, only keeping first " << maxseed << endl;
+	cout << " increase maxseed in ECALGarlicCluster::getSeeds" << endl;
+      }
     } else {
-      bool stop_it=false;
-      for(int n_i=0;n_i<10;n_i++) {
-	ExtendedHit *nearestHit=NULL;
-
-	_geomHelper->GetNearestHitInPseudoLayer(lay,&next_search_spot,&preCluster,nearestHit);
-	if(nearestHit==0) {
-	  if(lay>_n_ly_hole_cut && n_i ==0) {
-	    if(hole_after_cut==true) {
-	      if(_algoParams->GetDebug()>2) 
-		cout << "Second hole in core after 10 X0 in layer " << lay << ": core finished" << endl;
-	      stop_it=true;
-	      break;
-	    }
-	    hole_after_cut=true;
-	  }
-	  if(_algoParams->GetDebug()>2) cout << "Braking at n_i = " << n_i << " in layer " << lay << endl;
-	  break;  
-	}
-	vec3 nearestPos;
-	nearestPos.x=nearestHit->hit->getPosition()[0];
-	nearestPos.y=nearestHit->hit->getPosition()[1];
-	nearestPos.z=nearestHit->hit->getPosition()[2];
-	double dist=_geomHelper->Get2dProjDistance(&nearestPos,mySeed); 
-	if(_algoParams->GetDebug()>2) cout << "Distance is: " << dist << endl;
-
-	double modifier =1;
-	if(preCluster.location==2)
-	  modifier=fabs(cos(Theta));
-	else
-	  modifier=sin(Theta);
-
-	if(dist<(1.*(_geomParams->Get_padSizeEcal()[1]))/modifier) { 		    
-	  nearestHit->clusterHitVec=&aCluster;
-	  aCluster.push_back(nearestHit);
-	  if(aCluster.size()>1)
-	    no2ndHit=false;
-	  if(_algoParams->GetDebug()>2) cout << "Added hit: " << nearestHit->hit->getCellID0() << 
-			 " at (" << nearestPos.x << ", " << nearestPos.y << ", " << nearestPos.z << "),in layer " << lay << endl;
-	  if(lay>_n_ly_hole_cut) {
-	    hole_after_cut=false;
-	  }
-	} else {
-	  if(n_i>0)
-	    break;
-	  if(lay>_n_ly_hole_cut) { // this was after 10 X0... no after hole cut
-	    if(hole_after_cut==true) {
-	      if(_algoParams->GetDebug()>2) 
-		cout << "Second hole in core after 10 X0 in layer " << lay << ": core finished" << dist << endl;
-	      stop_it=true;
-	      break;
-	    }
-	    else {
-	      if(lay==_geomParams->Get_nPseudoLayers()) {
-		if(_algoParams->GetDebug()>2) 
-		  cout << "End of ECAL in layer " << lay << ": core finished" << dist << endl;
-		stop_it=true;
-		break;
-	      }
-	      int nextLayerIs=lay+1;
-	      hole_after_cut=true;
-	      bool gapHoleVeto=false; // TODO: what if there is a hole in front of the cable gap?
-	      int gap_jump_to=0;
-	      vec3 after_next_search_spot=_clusterHelper->FollowClusterDirection(&next_search_spot,1,clusterDir,preCluster.location,gapHoleVeto,gap_jump_to);
-	      ExtendedHit *next_layer_nearestHit=NULL;
-	      _geomHelper->GetNearestHitInPseudoLayer(nextLayerIs,&next_search_spot,&preCluster,next_layer_nearestHit); // ...start looking for holes of two layers
-	      if(next_layer_nearestHit==0) {
-		if(_algoParams->GetDebug()>2) 
-		  cout << "No nearest hit in next layer : core finished"  << endl;
-		stop_it=true;
-		break;
-	      }
-	      vec3 next_layer_nearestPos;
-	      next_layer_nearestPos.x=next_layer_nearestHit->hit->getPosition()[0];
-	      next_layer_nearestPos.y=next_layer_nearestHit->hit->getPosition()[1];
-	      next_layer_nearestPos.z=next_layer_nearestHit->hit->getPosition()[2];
-	      double dist_nl=_geomHelper->Get2dProjDistance(mySeed,&after_next_search_spot);
-
-	      double modifier =1;
-	      if(preCluster.location==2)
-		modifier=fabs(cos(Theta));
-	      else
-		modifier=sin(Theta);
-
-	      if(dist_nl>(1.*(_geomParams->Get_padSizeEcal()[0]))/modifier) {
-		if(_algoParams->GetDebug()>2) 
-		  cout << "Nearest hit in next layer is not close enough : core finished"  << endl;
-		stop_it=true;
-		break;
-	      }
-	    }
-	  }
-	}
+      if (ibadseed<maxseed) {
+	badseedXvec[ibadseed]=seed_x;
+	badseedYvec[ibadseed]=seed_y;
+	ibadseed++;
       }
-      // get out of layer loop ...
-      if(stop_it==true)
-	break;
     }
+    
+    for (size_t i=0; i<seedCells.size(); i++) {
+      henergy->SetBinContent(seedCells[i].first, seedCells[i].second, 0);
+      hhits  ->SetBinContent(seedCells[i].first, seedCells[i].second, 0);
+    }
+    seedCells.clear();
+    maxbin = henergy->GetMaximumBin();
+    maxen = henergy->GetBinContent( maxbin ); 
   }
+
+
+  if (henergy && hhits && _fhistos) {
+    _fhistos->cd();
+    TGraph* gr = new TGraph(iseed, seedXvec, seedYvec);
+    gr->SetNameTitle("seeds"+blah,"seeds"+blah);
+    gr->Write();
+
+    TGraph* gr2 = new TGraph(ibadseed, badseedXvec, badseedYvec);
+    gr2->SetNameTitle("badseeds"+blah,"badseeds"+blah);
+    gr2->Write();
+    _nSaveHist++;
+  }
+
+  if (henergy) delete henergy;
+  if (hhits) delete hhits;
+
+  return seeds;
+}
+
+vector < std::pair < ExtendedTrack*, ExtendedCluster2* > > ECALGarlicCluster::getElectrons( ExtendedCluster2* preCluster, vector <ExtendedTrack* > trks ) {
+
+  //  cout << "hello from ECALGarlicCluster::getElectrons "<< trks.size() << " " << preCluster->getNhits() << endl;
   
-  if(continueAfterGapJump==true) {
-    if(_algoParams->GetDebug()>2) 
-      cout << "...at " << afterJump.x << ", " << afterJump.y << ", " << afterJump.z << endl;
-    //now continue in the endcap: since the shower seems to be spread a lot wider, we are more generous with the distance cuts
-    for(int lay=0;lay<_geomParams->Get_nPseudoLayers();lay++) {
-      bool gapHoleVeto=false;
-      int gap_jump_to=0;
-      vec3 next_search_spot=_clusterHelper->FollowClusterDirection(&afterJump,lay,clusterDir,preCluster.location,gapHoleVeto,gap_jump_to);
-      if(gapHoleVeto==true) {
-	cout << "Why did you get here? You are already in the endcap!" << endl;
-	continue;
+  vector < std::pair < ExtendedTrack*, ExtendedCluster2* > > electrons;
+
+  float addCut = 1.9*ECALGarlicGeometryParameters::Instance().Get_padSizeEcal()[1]; // include diagonal but not 2 cells away
+  int nIterations = ECALGarlicAlgorithmParameters::Instance().GetClusterNIterations();
+  const float origin[3]={0,0,0};
+  
+  for ( size_t it=0; it<trks.size(); it++ ) {
+
+    // position and direction of track at ECAL front face
+    const float* position  = trks[it]->getEcalEntryPos();
+    const float* direction = trks[it]->getEcalEntryDir();
+
+    // build a "seed"
+    CalorimeterHitImpl seed;
+    seed.setEnergy(1);
+    seed.setPosition(position);
+
+    // make the core
+    ExtendedCluster2* electronCore = BuildCore( &seed, preCluster, direction);
+
+    // find hits not too far from core axis
+    std::vector < ExtendedHit2* > possibleHits;
+    for ( size_t ij=0; ij<preCluster->getHits()->size(); ij++) {
+      ExtendedHit2* hh = preCluster->getHits()->at(ij);
+      if ( find(possibleHits.begin(), possibleHits.end(), hh)!=possibleHits.end() ) {
+	float dist = ECALGarlicGeometryHelpers::GetDistToLine(hh->getCaloHit()->getPosition(), origin, electronCore->getCentreOfGravity());
+	if (dist<40.) possibleHits.push_back(hh);
       }
-      bool stop_it=false;
-      for(int n_i=0;n_i<9;n_i++) {
-	ExtendedHit *nearestHit=NULL;
-	_geomHelper->GetNearestHitInPseudoLayer(lay,&next_search_spot,&preCluster,nearestHit);
-	if(nearestHit==0) {
-	  if(lay>_n_ly_hole_cut && n_i ==0) {
-	    if(hole_after_cut==true) {
-	      if(_algoParams->GetDebug()>2) 
-		cout << "Second hole in core after 10 X0 in Endcap layer " << lay << ": core finished" << endl;
-	      stop_it=true;
-	      break;
-	    }
-	    hole_after_cut=true;
-	  }
-	  if(_algoParams->GetDebug()>2)
-	    cout << "Braking at n_i = " << n_i << " in Endcap layer " << lay << endl;
-	  break;  
-	}
-	vec3 nearestPos;
-	nearestPos.x=nearestHit->hit->getPosition()[0];
-	nearestPos.y=nearestHit->hit->getPosition()[1];
-	nearestPos.z=nearestHit->hit->getPosition()[2];
-	double dist=_geomHelper->Get2dProjDistance(&nearestPos,&afterJump); 
-	if(_algoParams->GetDebug()>2)
-	  cout << "Distance is: " << dist << endl;
-	if(dist<sqrt(8.)/fabs(cos(Theta))*(_geomParams->Get_padSizeEcal()[0])) { 		    
-	  nearestHit->clusterHitVec=&aCluster;
-	  aCluster.push_back(nearestHit);
-	  if(_algoParams->GetDebug()>2)
-	    cout << "Added hit: " << nearestHit->hit->getCellID0() << " at (" << nearestPos.x << ", " << nearestPos.y << ", " << nearestPos.z << "),in Endcap layer " << lay << endl;
-	  if(lay>_n_ly_hole_cut) {
-	    hole_after_cut=false;
-	  }
-	}
-	else {
-	  if(n_i>0)
+    }
+
+    for (int iiter=0; iiter<nIterations; iiter++) {
+      std::vector < ExtendedHit2* > hitsToAdd;
+      for ( int ij=possibleHits.size()-1; ij>=0; ij--) {
+	
+	std::vector < ExtendedHit2* > * corehits = electronCore->getHits();
+
+	for (size_t ik=0; ik<corehits->size(); ik++) {
+	  ExtendedHit2* chit = corehits->at(ik);
+	  float dist(0);
+	  for (int i=0; i<3; i++) 
+	    dist += pow ( possibleHits[ij]->getPosition()[i] - chit->getCaloHit()->getPosition()[i], 2);
+	  dist = sqrt(dist);
+	  if (dist<addCut) {
+	    hitsToAdd.push_back(chit);
 	    break;
-	  if(lay>_n_ly_hole_cut) { // This was after 10 X0... no after hole cut
-	    if(hole_after_cut==true) {
-	      if(_algoParams->GetDebug()>2) 
-		cout << "Second hole in core after 10 X0 in Ecdcap layer " << lay << ": core finished" << dist << endl;
-	      stop_it=true;
-	      break;
-	    }
-	    else {
-	      if(lay==_geomParams->Get_nPseudoLayers()) {
-		if(_algoParams->GetDebug()>2) 
-		  cout << "End of ECAL in Endcap layer " << lay << ": core finished" << dist << endl;
-		stop_it=true;
-		break;
-	      }
-	      int nextLayerIs=lay+1;
-	      hole_after_cut=true;
-	      bool gapHoleVeto=false; // TODO: what if there is a hole in front of the cable gap?
-	      int gap_jump_to=0;
-	      vec3 after_next_search_spot=_clusterHelper->FollowClusterDirection(&next_search_spot,1,clusterDir,preCluster.location,gapHoleVeto,gap_jump_to);
-	      ExtendedHit *next_layer_nearestHit=NULL;
-	      _geomHelper->GetNearestHitInPseudoLayer(nextLayerIs,&next_search_spot,&preCluster,next_layer_nearestHit); // ...start looking for holes of two layers
-	      if(next_layer_nearestHit==0) {
-		if(_algoParams->GetDebug()>2) 
-		  cout << "No nearest hit in next Endcap layer : core finished"  << endl;
-		stop_it=true;
-		break;
-	      }
-	      vec3 next_layer_nearestPos;
-	      next_layer_nearestPos.x=next_layer_nearestHit->hit->getPosition()[0];
-	      next_layer_nearestPos.y=next_layer_nearestHit->hit->getPosition()[1];
-	      next_layer_nearestPos.z=next_layer_nearestHit->hit->getPosition()[2];
-	      double dist_nl=_geomHelper->Get2dProjDistance(&afterJump,&after_next_search_spot);
-	      if(dist_nl>sqrt(5.)/fabs(cos(Theta))*(_geomParams->Get_padSizeEcal()[lay])) {
-		if(_algoParams->GetDebug()>2) 
-		  cout << "Nearest hit in next Endcap layer is not close enough : core finished"  << endl;
-		stop_it=true;
-		break;
-	      }
-	    }
 	  }
 	}
+
       }
-      // get out of layer loop ...
-      if(stop_it==true)
+
+      if (hitsToAdd.size()>0) {
+	electronCore->addHits(hitsToAdd);
+      }
+
+    }
+
+    float EonP = electronCore->getEnergy()/trks[it]->getTotalMomentum();
+
+    // make cuts to find electron clusters
+    if (electronCore->getNhits()>0 && 
+	EonP>0.5 && EonP<1.5 &&
+	electronCore->getLongEn()[0]>0.1 && electronCore->getLongEn()[0]+electronCore->getLongEn()[1]>0.5
+	) {
+
+      // cout << "found a cluster seeded by track" << endl;
+      // cout << " track momentum = " << trks[it]->getTotalMomentum() << " ";
+      // cout << " nhits = " << electronCore->getNhits() << " energy = " << electronCore->getEnergy() << " ";
+      // cout << " E/p = " << EonP << endl;
+      // cout << " long fracs = " << electronCore->getLongEn()[0] << " " << electronCore->getLongEn()[1] ;
+      // cout << " " << electronCore->getLongEn()[2] << " " << electronCore->getLongEn()[3] << endl;
+
+      electrons.push_back( std::pair < ExtendedTrack*, ExtendedCluster2* > ( trks[it], electronCore ) );
+    }
+
+  } // loop over tracks
+
+
+  return electrons;
+}
+
+
+
+
+std::map < CalorimeterHit*, ExtendedCluster2* > ECALGarlicCluster::getClusters( ExtendedCluster2* preCluster, std::map < CalorimeterHit*, ExtendedCluster2* > cores ) {
+  // assign unassigned hits to "best" core
+
+  float addCut = 1.9*ECALGarlicGeometryParameters::Instance().Get_padSizeEcal()[1]; // include diagonal but not 2 cells away
+  int nIterations = ECALGarlicAlgorithmParameters::Instance().GetClusterNIterations();
+
+  // duplicate the cores into the clusters
+  std::map < CalorimeterHit*, ExtendedCluster2* > clusters;
+  for ( std::map < CalorimeterHit*, ExtendedCluster2* >::iterator clit = cores.begin(); clit!=cores.end(); clit++ ) {
+    ExtendedCluster2* cluster = new ExtendedCluster2();
+    (*cluster) = *(clit->second);
+    clusters[clit->first] = cluster;
+  }
+
+  // first extract the unassigned hits within precluster
+  std::vector < ExtendedHit2* > unassignedHits = *(preCluster->getHits());
+  for ( int ihh=unassignedHits.size()-1; ihh>=0; ihh-- ) {
+    for ( std::map < CalorimeterHit*, ExtendedCluster2* >::iterator clit = clusters.begin(); clit!=clusters.end(); clit++ ) {
+      if ( find( clit->second->getHits()->begin(), clit->second->getHits()->end(), unassignedHits[ihh] ) != clit->second->getHits()->end() ) {
+	// cout << "erasing hit " << ihh << " at " << unassignedHits[ihh] << endl;
+	unassignedHits.erase( unassignedHits.begin()+ihh );
 	break;
+      }
     }
   }
+
+  for (int iiter=0; iiter<nIterations; iiter++) {
+    std::map < CalorimeterHit*, std::vector < ExtendedHit2* > > preassignedHits;
+    // find distance to closest hit in core
+    for ( int ihh=unassignedHits.size()-1; ihh>=0; ihh-- ) {
+      float mindist=99999;
+      CalorimeterHit* closestCore=0;
+      for ( std::map < CalorimeterHit*, ExtendedCluster2* >::iterator clit = clusters.begin(); clit!=clusters.end(); clit++ ) {
+	std::vector < ExtendedHit2* >* corehits = clit->second->getHits();
+	for (size_t ich=0; ich<corehits->size(); ich++) {
+	  float dist(0);
+	  for (int i=0; i<3; i++) dist+=pow( (*corehits)[ich]->getPosition()[i] - unassignedHits[ihh]->getPosition()[i] , 2. );
+	  dist = sqrt(dist);
+	  if (dist<mindist) {
+	    mindist=dist;
+	    closestCore=clit->first;
+	  }
+	}
+      }
+      if (mindist<addCut) {
+	if ( preassignedHits.find(closestCore)!=preassignedHits.end() ) {
+	  preassignedHits[closestCore].push_back(unassignedHits[ihh]);
+	} else {
+	  std::vector < ExtendedHit2* > temp;
+	  temp.push_back( unassignedHits[ihh] );
+	  preassignedHits[closestCore]=temp;
+	}
+	unassignedHits.erase(unassignedHits.begin()+ihh);
+      }
+    }
+    for ( std::map < CalorimeterHit*, std::vector < ExtendedHit2* > >::iterator preass = preassignedHits.begin(); preass!=preassignedHits.end(); preass++) {
+      //      cout << "adding preassigned hits to core" << endl;
+      clusters[preass->first]->addHits(preass->second);
+    }
+  } // iterations
+
+  return clusters;
 }
 
-void ECALGarlicCluster::BuildClusterFromNeighbours(vector<ExtendedHit* > &myCluster, vec3 *clusterDir, ExtendedCluster &preCluster) 
-{
-  TVector3 dir(clusterDir->x,clusterDir->y,clusterDir->z);
-  double Theta = dir.Theta();
-  for(int iteration=0;iteration<_algoParams->GetNIterations(); iteration++) {
-    //cout << " Iteration: " << iteration << endl;
-    // create a copy from the cluster to restrain added hits in 1 iteration
-    vector<ExtendedHit* > myCluster_copy=myCluster;
-    if(_algoParams->GetDebug()>2) cout << "Cluster copied... now working on copy!" << endl;
-    for(int layer_i=(myCluster_copy[0]->pseudoLayer);layer_i<_geomParams->Get_nPseudoLayers();layer_i++) {
-      int NHitsInCopy=myCluster_copy.size();
-      for( int hit_i = 0; hit_i<NHitsInCopy; hit_i++ ) {
-	ExtendedHit *a_copy_hit=dynamic_cast<ExtendedHit *>(myCluster_copy[hit_i]);
-	if(a_copy_hit) {
-	  if(a_copy_hit->pseudoLayer==layer_i) {
-	    //insert the neighbours
-	    vector<ExtendedHit* > freeNeighbours;
-	    _clusterHelper->GetFreeNeighbours(a_copy_hit, freeNeighbours, &preCluster, iteration, Theta);
-	    int NNeighbours=freeNeighbours.size();
-	    if(NNeighbours>0) {
-	      for(int neigh_i=0;neigh_i<NNeighbours;neigh_i++) {
-		ExtendedHit *a_neighbour=dynamic_cast<ExtendedHit *>(freeNeighbours[neigh_i]);
-		if(a_neighbour) {
-		  if(_algoParams->GetDebug()>2) cout << "Added neighbour hit "  << a_neighbour->hit->getCellID0() << endl;
- 		  a_neighbour->clusterHitVec=&myCluster;
-		  myCluster.push_back(a_neighbour);
-		}
-	      }
+
+std::map < CalorimeterHit*, ExtendedCluster2* > ECALGarlicCluster::getCores( ExtendedCluster2* preCluster, std::vector <CalorimeterHit*> seeds ) {
+  std::map < CalorimeterHit*, ExtendedCluster2* > cores;
+  if (seeds.size()==0) {
+    cout << "WARNING getCores: no seeds given!" << endl;
+    return cores;
+  }
+
+  for (size_t iseed = 0; iseed<seeds.size(); iseed++) {
+    CalorimeterHit* seed = seeds[iseed];
+    const float* clusterDirection = seed->getPosition(); // look for pointing photons
+    cores[seed] = BuildCore( seed, preCluster, clusterDirection);
+    //    cout << " core " << iseed << " has " << cores[seed]->getHits()->size() << " hits" << endl;
+  }
+
+  // check for shared hits...
+  // give to most energetic
+  std::map < CalorimeterHit*, ExtendedCluster2* >::iterator itt;
+  std::map < CalorimeterHit*, ExtendedCluster2* >::iterator jtt;
+
+  for (itt=cores.begin(); itt!=cores.end(); itt++) {
+
+    std::vector<ExtendedHit2*>* ih = itt->second->getHits();
+
+    if (ih->size()==0) continue;
+
+    for (jtt=itt; jtt!=cores.end(); jtt++) {
+      if (jtt==itt) continue;
+      if (jtt==cores.end()) continue;
+
+      for (int ii= (int) ih->size()-1; ii>=0; ii--) {
+	std::vector<ExtendedHit2*>* jh = jtt->second->getHits();
+	if (jh->size()==0) continue;
+	for (int jj= (int) jh->size()-1; jj>=0; jj--) {
+	  if ( (*ih)[ii] == (*jh)[jj] ) {
+	    float e_i = itt->second->getHits()->size()==0 ? 0 : itt->second->getEnergy();
+	    float e_j = jtt->second->getHits()->size()==0 ? 0 : jtt->second->getEnergy();
+	    if ( e_i > e_j ) {
+	      jtt->second->removeHit( (*ih)[ii] );
+	    } else {
+	      itt->second->removeHit( (*ih)[ii] );
 	    }
 	  }
 	}
       }
+
+
     }
   }
-}
 
-
-
-void ECALGarlicCluster::MergeSatellites(vector<ExtendedCluster* > *clusters)
-{
-  // clusters are ordered by energy. 
-  // a cluster is considered a satellite if : 1.) invariant mass of the two clusters combinded is lower than pi0 mass, 2.) (minimum) distance from possible main cluster is smaller than user value, 3.) Fits in a given CosTh:EnRatio value
-  int NClusters=clusters->size();
-  if(NClusters>1) {
-    //map<ExtendedCluster* ,vector<ExtendedCluster* >* > main_clusters;
-    //vector<ExtendedCluster* > *satellites = new vector<ExtendedCluster* >();
-    vector<ExtendedCluster* > main_clusters;
-    vector<ExtendedCluster* > satellites;
-    vector<ExtendedCluster* >::iterator sat_it;
-    vector<ExtendedCluster* >::iterator main_it;
-    vector<ExtendedCluster* >::iterator clus_it;
-
-    // initialise functions
-    TF1 *para0 = new TF1("para0","[0]+[1]*exp([2]*x)",0,400);
-    para0->SetParameter(0,9.99855e-01);
-    para0->SetParameter(1,-3.67450e-03);
-    para0->SetParameter(2,-1.07102e-01);
-
-    TF1 *para1 = new TF1("para1","[0]+[1]*exp([2]*x)",0,400);
-    para1->SetParameter(0,-1.95419);
-    para1->SetParameter(1,1.29176e-01);
-    para1->SetParameter(2,-6.81975e-02);
-
-    for(int cl_i=0;cl_i<NClusters;cl_i++) {
-      ExtendedCluster *a_ext_cluster = dynamic_cast<ExtendedCluster*>((*clusters)[cl_i]);
-      ClusterParameters *clus_par = a_ext_cluster->Parameters;
-      double clus_en = clus_par->E_GeV;
-      if(clus_en>5)
-	main_clusters.push_back((*clusters)[cl_i]);
-      if(clus_en<_algoParams->GetMaxSatEn() && clus_en>_algoParams->GetMinSatEn()) {
-	satellites.push_back((*clusters)[cl_i]);
-      }	
-    }
-    if(main_clusters.size()>0 && satellites.size()>0) {
-      for(sat_it=satellites.begin();sat_it!=satellites.end();sat_it++) {
-	bool is_satellite=false;
-	// find nearest main cluster
-	double min_dist = 99999;
-	double max_en = 0;
-	double distances[3];
-	ExtendedCluster *main=0;
-	for(main_it=main_clusters.begin();main_it!=main_clusters.end();main_it++) {
-	  _geomHelper->GetDistancesBetweenClusters(*sat_it, *main_it, distances);
-	  double clus_en = ((*main_it)->Parameters)->E_GeV;
-	  if(distances[0]<min_dist) {
-	    min_dist = distances[0];
-	    max_en = clus_en;
-	    main = (*main_it);
-	  }
-	  if(distances[0]==min_dist)
-	    if(clus_en>max_en)
-	      {
-		min_dist = distances[0];
-		max_en = clus_en;
-		main = (*main_it);
-	      }
-	}
-	if(main) {
-	  double main_en = ((main)->Parameters)->E_GeV;
-	  double max_sat_dist = 4*_geomParams->Get_padSizeEcal()[0];
-	  if(main_en>15)
-	    max_sat_dist =(6*_geomParams->Get_padSizeEcal()[0]) ;
-	  if(min_dist< max_sat_dist) {
-	    // set limits according to main energy
-	    double cosTh_lim = 0.86;
-	    double enRatio_lim = 0.08;
-	    if(main_en>8) {
-	      enRatio_lim = 0.06;
-	      cosTh_lim = 0.9;
-	    }
-	    if(main_en>10) {
-	      enRatio_lim = 0.05;
-	      cosTh_lim = 0.9;
-	    }
-	    if(main_en>15) {
-	      enRatio_lim = 0.035;
-	      cosTh_lim = 0.92;
-	    }
-	    if(main_en>35) {
-	      enRatio_lim = 0.03;
-	      cosTh_lim = 0.93;
-	    }
-	    
-	    double sat_en = ((*sat_it)->Parameters)->E_GeV;
-	    // initialise functions
-	    double par_0 = para0->Eval(main_en);
-	    double par_1 = para1->Eval(main_en);
-	    TF1 *lin = new TF1("lin","pol1",0,1);
-	    lin->SetParameter(0,par_0);
-	    lin->SetParameter(1,par_1);
-	    
-	    double enRatio = sat_en/main_en;
-	    double cosTh = fabs(main_en-sat_en)/(main_en+sat_en);
-	    //cout << "EnRatio: "  << enRatio << " , CosTh: " << cosTh << endl;
-	    if(cosTh>cosTh_lim && enRatio<enRatio_lim) {
-	      double ref_val = lin->Eval(enRatio);
-	      //cout << " RefVal: " << ref_val << endl;
-	      if(fabs(cosTh-ref_val) < 0.002) {
-		is_satellite = true;
-		//cout << "Satellite!" << endl;
-	      }
-	    }
-	    if(is_satellite) {
-	      //transefr hits
-	      vector<ExtendedHit*> *main_hitVec = &(main->hitVec);
-	      vector<ExtendedHit*> *sat_hitVec = &((*sat_it)->hitVec);
-	      int NSatHits = sat_hitVec->size();
-	      for(int h_i=0;h_i<NSatHits;h_i++) {
-		ExtendedHit *myHit = dynamic_cast<ExtendedHit* > ((*sat_hitVec)[h_i]);
-		myHit->cluster = main;
-		myHit->clusterHitVec = main_hitVec;
-		main_hitVec->push_back(myHit);
-		//cout << "Transfered hit" << endl;
-	      }
-	      //delete satellite from cluster vector
-	      for(clus_it=clusters->begin();clus_it!=clusters->end();clus_it++) {
-		if(*clus_it==*sat_it) {
-		  clusters->erase(clus_it);
-		  //cout << "Erased satellite" << endl;
-		  break;
-		}
-	      }
-	    }
-	    delete lin;
-	  }
-	}
+  // remove any cores which have been completely eaten by neighbours (shared hits)...
+  bool changed=true;
+  while (changed) {
+    changed=false;
+    for (itt=cores.begin(); itt!=cores.end(); itt++) {
+      if (itt->second->getHits()->size()==0) {
+	cores.erase(itt);
+	changed=true;
+	break;
       }
     }
-    delete para0;
-    delete para1;
   }
+
+  return cores;
 }
+
+
+ExtendedCluster2* ECALGarlicCluster::BuildCore(CalorimeterHit* mySeed, ExtendedCluster2* preCluster, const float *clusterDir) {
+
+  int nl_1         = ECALGarlicAlgorithmParameters::Instance().GetCoreLayersSection1();
+  int allowedGap_1 = ECALGarlicAlgorithmParameters::Instance().GetCoreMaxHoleSection1();
+  int allowedGap_2 = ECALGarlicAlgorithmParameters::Instance().GetCoreMaxHoleSection2();
+
+  ExtendedHit2 seedHit(mySeed);
+
+  std::vector <ExtendedHit2*> coreHits;
+
+  std::vector <ExtendedHit2*> allPreclusterHits = *(preCluster->getHits());
+
+  std::map <int, int> hitPseudoLayersBarrel;
+  std::map <int, int> hitPseudoLayersEndcap;
+
+  // define the distance window to add hits to the core
+  float distCut = 1.5*ECALGarlicGeometryParameters::Instance().Get_padSizeEcal()[0];
+
+  //  cout << "cell size, dist cut = " << ECALGarlicGeometryParameters::Instance().Get_padSizeEcal()[0] << " " << distCut << endl;
+
+  for (size_t ih=0; ih<allPreclusterHits.size(); ih++) {
+
+    ExtendedHit2* thisHit = allPreclusterHits[ih];
+
+    // project all hit onto plane defined by seed position and clusterDir
+    const float* hitpos = thisHit->getPosition();
+    float proj[3];
+    ECALGarlicGeometryHelpers::GetGeneralPointPlaneProjection(hitpos, mySeed->getPosition(), mySeed->getPosition(), clusterDir, proj);
+
+    // distance from seed position to projected hit
+    float dist(0);
+    for (int i=0; i<3; i++) dist+= pow( proj[i] - mySeed->getPosition()[i], 2);
+    dist=sqrt(dist);
+
+    // if (dist>1000) {
+    //   cout << "ECALGarlicCluster::BuildCore : probable ERROR in projection measurement! too large distance " << dist << endl;
+    //   cout << "seed pos = " << mySeed->getPosition()[0] << " " << mySeed->getPosition()[1] << " " << mySeed->getPosition()[2] << endl;
+    //   cout << "hit pos = " << hitpos[0] << " " << hitpos[1] << " " << hitpos[2] << endl;
+    //   cout << "projection = " << proj[0] << " " << proj[1] << " " << proj[2] << endl;
+    //   cout << "cluster dir = " << clusterDir[0] << " " << clusterDir[1] << " " << clusterDir[2] << endl;
+    // }
+
+    // take account of non-normal detector cells
+    float inflationFactor(1.);
+    float mag(0);
+    for (int i=0; i<3; i++) mag+=pow( thisHit->getPosition()[i], 2. );
+    mag = sqrt(mag);
+    float r(0);
+    for (int i=0; i<2; i++) r+=pow( thisHit->getPosition()[i], 2. );
+    r=sqrt(r);
+    float theta = acos ( fabs( thisHit->getPosition()[2])/mag );
+    if ( thisHit->getZone()==CALHITZONE_BARREL ) {
+      float alpha = acos(-1)/2. - theta;
+      inflationFactor = 1./cos(alpha);
+    } else if ( thisHit->getZone()==CALHITZONE_ENDCAP || thisHit->getZone()==CALHITZONE_RING) {
+      inflationFactor = 1./cos(theta);
+    } else {
+      cout << "hit " << ih << " in strange detector region " << thisHit->getZone() << " position " <<
+	thisHit->getPosition()[0] << " " << thisHit->getPosition()[1] << " " << thisHit->getPosition()[2] << endl;
+    }
+
+    float thisHitDistCut = distCut*inflationFactor;
+
+
+    //    cout << thisHit->getZone() << " " << mag << " " << r << " " << theta << " " << inflationFactor << " " << distCut << " " << thisHitDistCut << endl;
+
+    if ( seedHit.getZone()==CALHITZONE_BARREL && thisHit->getZone()==CALHITZONE_ENDCAP ) 
+      thisHitDistCut*=3;
+
+    if (dist<thisHitDistCut) {
+      coreHits.push_back(thisHit);
+      int player = thisHit->getPseudoLayer();
+      if ( thisHit->getZone()==CALHITZONE_BARREL ) {
+	if ( hitPseudoLayersBarrel.find(player)==hitPseudoLayersBarrel.end() ) hitPseudoLayersBarrel[player]=1;
+	else hitPseudoLayersBarrel[player]++;
+      } else if ( thisHit->getZone()==CALHITZONE_ENDCAP || thisHit->getZone()==CALHITZONE_RING) {
+	if ( hitPseudoLayersEndcap.find(player)==hitPseudoLayersEndcap.end() ) hitPseudoLayersEndcap[player]=1;
+	else hitPseudoLayersEndcap[player]++;
+      }
+
+      //      cout << "added hit to core: player, dist , cut " << player << " " << dist << " " << distCut << " " << thisHitDistCut << endl;
+
+    }
+  }
+
+  // now check for missed pseudo-layers
+  if ( (hitPseudoLayersBarrel.size()==0 && hitPseudoLayersEndcap.size()>0) ||
+       (hitPseudoLayersBarrel.size()>0 && hitPseudoLayersEndcap.size()==0) ) { // all barrel or all endcap
+    std::map <int, int>* pls = hitPseudoLayersBarrel.size() ? &hitPseudoLayersBarrel : &hitPseudoLayersEndcap;
+
+    int firstHit(-1);
+    int consecutiveEmpty(0);
+    int lastEmpty(-1);
+    int lastFilled(-1);
+
+    bool stopit(false);
+
+    for (int i=0; i< ECALGarlicGeometryParameters::Instance().Get_nPseudoLayers(); i++) {
+      if ( pls->find(i) != pls->end() ) { // this player hit
+	if (firstHit<0) firstHit=i;
+	lastFilled=i;
+	lastEmpty=-1;
+	consecutiveEmpty=0;
+      } else { // no hit
+	if (firstHit>=0) {
+	  consecutiveEmpty++;
+	  lastEmpty=i;
+	}
+      }
+      // cout << "player " << i << " fHit=" << firstHit << " lFill=" << lastFilled << " lEmp=" << lastEmpty << " consEm=" << consecutiveEmpty << endl;
+      if ( lastFilled<=nl_1 ) {
+	if ( consecutiveEmpty > allowedGap_1 ) stopit = true;
+      } else {
+	if ( consecutiveEmpty > allowedGap_2 ) stopit = true;
+      }
+      if (stopit) {
+	// cout << "deciding to stop this core building, gapSize=" << consecutiveEmpty << " lastFilledLayer=" << lastFilled << endl;
+	break;
+      }
+    }
+
+    // remove the hits beyond the break point
+    for (int ihh=coreHits.size()-1; ihh>=0; ihh--) {
+      if (coreHits[ihh]->getPseudoLayer()>lastFilled) coreHits.erase(coreHits.begin()+ihh);
+    }
+    
+  } else if (hitPseudoLayersBarrel.size()==0 && hitPseudoLayersEndcap.size()==0) {
+
+    // cout << "STRANGE (probably an error), found no hits in core!" << endl;
+
+  } else { // got mixed barrel endcap case
+
+    cout << "mixed barrel endcap case!  nBarrel=" << hitPseudoLayersBarrel.size() << " nEnd=" << hitPseudoLayersEndcap.size() << endl;
+    cout << "   WARNING do not yet know how to deal with this!!" << endl;
+    cout << "    will not break the core" << endl;
+
+    // cout << "barrel hits " << endl;
+    // for ( std::map <int, int>::iterator itt = hitPseudoLayersBarrel.begin(); itt!=hitPseudoLayersBarrel.end(); itt++) {
+    //   cout << "  " << itt->first << " " << itt->second << endl;
+    // }
+    // cout << "endcap hits " << endl;
+    // for ( std::map <int, int>::iterator itt = hitPseudoLayersEndcap.begin(); itt!=hitPseudoLayersEndcap.end(); itt++) {
+    //   cout << "  " << itt->first << " " << itt->second << endl;
+    // }
+
+
+
+  }
+
+  ExtendedCluster2* coreClus = new ExtendedCluster2();
+  coreClus->addHits( coreHits );
+
+  return coreClus;  
+}
+
+
+void ECALGarlicCluster::mergeSatellites( std::map < CalorimeterHit*, ExtendedCluster2* > & clusters ) {
+
+  // the parameters
+  float touchingLayerFraction = ECALGarlicAlgorithmParameters::Instance().GetMergeTouchFraction();
+  int   initialSeparationCut = ECALGarlicAlgorithmParameters::Instance().GetMergeInitalLayerSeparation();
+
+  std::map < CalorimeterHit*, ExtendedCluster2* >::iterator itt;
+  std::map < CalorimeterHit*, ExtendedCluster2* >::iterator jtt;
+
+  const float touchDist = 1.5*ECALGarlicGeometryParameters::Instance().Get_padSizeEcal()[0];
+
+  // compare all cluster pairs
+
+  bool changed = true;
+  while (changed) {
+    changed = false;
+
+    for ( itt = clusters.begin(); itt!=clusters.end(); itt++) {
+
+      // also don't want penultimate one
+      jtt=itt;
+      jtt++;
+      if (jtt==clusters.end()) continue;
+
+      ExtendedCluster2* cl_i = itt->second;
+      if (!cl_i) continue;
+
+      std::vector<ExtendedHit2*>* hits_i = cl_i->getHits();
+
+      for ( jtt = clusters.begin(); jtt!=clusters.end(); jtt++) {
+
+	if (jtt==itt) continue;
+
+	ExtendedCluster2* cl_j = jtt->second;
+	if (!cl_j) continue;
+
+	float cogDist(0);
+	for (int ik=0; ik<3; ik++) 
+	  cogDist+=pow( cl_i->getCentreOfGravity()[ik] - cl_j->getCentreOfGravity()[ik], 2);
+	cogDist=sqrt(cogDist);
+
+	if (cogDist>100.0) continue; // mm
+
+	//	cout << "trying to merge clusters with energies " << cl_i->getEnergy() << " " << cl_j->getEnergy() << endl;
+
+	// find min hit-hit distance in each p-layer
+	std::map < int, float > dist_player;
+
+	std::vector<ExtendedHit2*>* hits_j = cl_j->getHits();
+
+	for ( size_t i=0; i<hits_i->size(); i++) {
+	  ExtendedHit2* h_i = (*hits_i)[i];
+	  int pl_i = h_i->getPseudoLayer();
+	  for ( size_t j=0; j<hits_j->size(); j++) {
+	    ExtendedHit2* h_j = (*hits_j)[j];
+	    int pl_j = h_j->getPseudoLayer();
+	    if (pl_i!=pl_j) continue;
+	    
+	    float dist = 0;
+	    for (int kk=0; kk<3; kk++) 
+	      dist+=pow( h_i->getCaloHit()->getPosition()[kk] - h_j->getCaloHit()->getPosition()[kk], 2);
+	    dist = sqrt( dist );
+
+	    if (dist_player.find(pl_i)==dist_player.end()) dist_player[pl_i] = dist;
+	    else                                           dist_player[pl_i] = std::min ( dist_player[pl_i], dist);
+	  }
+	}
+
+	// count no of close-by-layers
+	int ntouch(0);
+	int initialSeparation(0);
+	bool stillSeparated(true);
+
+	for ( std::map < int, float > ::iterator ipp=dist_player.begin(); ipp!=dist_player.end(); ipp++ ) {
+	  if ( ipp->second < touchDist ) {
+	    stillSeparated=false;
+	    ntouch++;
+	  } else {
+	    if (stillSeparated) initialSeparation++;
+	  }
+	}
+
+	//	cout << "mergeSatellites:: pair of clusters: min distances " << endl;
+	//	for ( std::map < int, float > ::iterator ipp=dist_player.begin(); ipp!=dist_player.end(); ipp++ ) {
+	//	  cout << ipp->first << " " << ipp->second << endl;
+	//	}
+	//	cout << "ntouching layers = " << ntouch << " / " << dist_player.size() << endl;
+	//	cout << "separated initial layers = " << initialSeparation << endl;
+	
+	if ( float(ntouch)/dist_player.size() > touchingLayerFraction && initialSeparation < initialSeparationCut ) { // merge the clusters
+
+	  // cout << "MERGING clusters! " << endl;
+
+	  cl_i->addHits(*hits_j);
+	  delete cl_j;
+	  jtt->second = NULL;
+	  
+	  // restart the second loop to compare with combined cluster
+	  jtt=itt;
+
+	  changed = true;
+	  break;
+	}
+
+      } // second cluster loop
+
+      if (changed) break;
+
+    } // first cluster loop
+  }
+
+  //  clusters.erase(clusters.begin(), clusters.end());
+
+  for (itt=clusters.end(); itt!=clusters.begin(); itt--) {
+    if (itt==clusters.end()) continue;
+    if (!itt->second) clusters.erase(itt);
+  }
+
+  // just double check...
+  for ( itt = clusters.begin(); itt!=clusters.end(); itt++) {
+    if (!itt->second) cout << "ERROR still a deleted cluster in the list!" << endl;
+  }
+
+  return;
+}
+
+
 

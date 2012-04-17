@@ -9,211 +9,266 @@ using std::cout;
 using std::endl;
 using std::vector;
 
-double ECALGarlicGeometryHelpers::Get2dProjDistance(vec3 *a,vec3 *b)
-{
+#include "ECALGarlicGeometryParameters.hh"
 
-  assert (_geomParams->Get_zOfBarrel()>-999 && _geomParams->Get_rOfBarrel()>-999 && _geomParams->Get_zOfEndcap()>-999);
+void ECALGarlicGeometryHelpers::getFrontFaceProj(const float* a, float* proj) {
+  float scale(0);
+  if( fabs(a[2])<=fabs(ECALGarlicGeometryParameters::Instance().Get_zOfBarrel()) ) { // in barrel, project onto cylinder
+    scale = ECALGarlicGeometryParameters::Instance().Get_rOfBarrel()/ sqrt(pow(a[0], 2) + pow(a[1], 2));
+  } else { // in endcap, project onto plane at front face
+    scale = fabs(ECALGarlicGeometryParameters::Instance().Get_zOfEndcap()/a[2]);
+  }
+  for (int i=0; i<3; i++) proj[i]=scale*a[i];
+  return;
+}
 
-  double dist;
-  if((a->z<_geomParams->Get_zOfBarrel() && a->z>(-_geomParams->Get_zOfBarrel()) && (b->z<_geomParams->Get_zOfBarrel()) && b->z>(-_geomParams->Get_zOfBarrel()))) {
-    double xp_a=a->x/sqrt(a->x*a->x+a->y*a->y)*_geomParams->Get_rOfBarrel();
-    double yp_a=a->y/sqrt(a->x*a->x+a->y*a->y)*_geomParams->Get_rOfBarrel();
-    double zp_a=a->z/sqrt(a->x*a->x+a->y*a->y)*_geomParams->Get_rOfBarrel();
-    double xp_b=b->x/sqrt(b->x*b->x+b->y*b->y)*_geomParams->Get_rOfBarrel();
-    double yp_b=b->y/sqrt(b->x*b->x+b->y*b->y)*_geomParams->Get_rOfBarrel();
-    double zp_b=b->z/sqrt(b->x*b->x+b->y*b->y)*_geomParams->Get_rOfBarrel();
-    dist=sqrt((xp_a-xp_b)*(xp_a-xp_b)+(yp_a-yp_b)*(yp_a-yp_b)+(zp_a-zp_b)*(zp_a-zp_b));
-  }
-  else {
-    double scale_a = fabs(_geomParams->Get_zOfEndcap()/a->z);
-    double x_a=(a->x)*scale_a;
-    double y_a=(a->y)*scale_a;
-    
-    double scale_b = fabs(_geomParams->Get_zOfEndcap()/b->z);
-    double x_b=(b->x)*scale_b;
-    double y_b=(b->y)*scale_b;
-    dist=sqrt((x_a-x_b)*(x_a-x_b)+(y_a-y_b)*(y_a-y_b));
-  }
-  return dist;
+double ECALGarlicGeometryHelpers::Get2dProjDistance(const float* a, const float* b) {
+  float aProj[3];
+  getFrontFaceProj(a, aProj);
+  float bProj[3];
+  getFrontFaceProj(b, bProj);
+  return Get3dDistance(aProj, bProj);
+}
+
+void ECALGarlicGeometryHelpers::GetGeneralPointPlaneProjection(const float* point, const float* pointOnPlane, const float* planeNormal, const float* projDirection, float* projection) {
+
+  // project a general point along a general projDirection onto a plane defined by pointOnPlane and planeNormal
+  float temp[3];
+  diff(pointOnPlane, point, temp);
+
+  float alpha = dot( temp, planeNormal ) / dot( projDirection, planeNormal );
+
+  float temp2[3];
+  scale( projDirection, alpha, temp2 );
+
+  sum( point, temp2, projection );
+  return;
 }
 
 
-double ECALGarlicGeometryHelpers::Get3dDistance(vec3 *a,vec3 *b)
-{
-  double x_a=a->x;
-  double y_a=a->y;
-  double z_a=a->z;
-  double x_b=b->x;
-  double y_b=b->y;
-  double z_b=b->z;
-  double dist=sqrt((x_a-x_b)*(x_a-x_b)+(y_a-y_b)*(y_a-y_b)+(z_a-z_b)*(z_a-z_b));
-  return dist;
+double ECALGarlicGeometryHelpers::Get3dDistance(const float* a, const float* b) {
+  return sqrt ( pow(a[0] - b[0],2) + pow(a[1] - b[1],2) + pow(a[2] - b[2],2) );
 }
 
-void ECALGarlicGeometryHelpers::GetDistancesBetweenClusters(ExtendedCluster *a,ExtendedCluster *b, double *distances)
-{
-  ClusterParameters *a_par = a->Parameters;
-  vec3 a_cog;
-  a_cog.x = a_par->COGx;
-  a_cog.y = a_par->COGy;
-  a_cog.z = a_par->COGz;
-  ClusterParameters *b_par = b->Parameters;
-  vec3 b_cog;
-  b_cog.x = b_par->COGx;
-  b_cog.y = b_par->COGy;
-  b_cog.z = b_par->COGz;
-  double smallest_dist=9999;
-  double firstHitDistance=9999;
-  int firstBPSLayer=99;
-  int firstAPSLayer=99;
-  std::vector<ExtendedHit* > *aHits = &(a->hitVec);
-  int NaHits = aHits->size();
-  vector<ExtendedHit* > *bHits = &(b->hitVec);
-  int NbHits = bHits->size();
-  for(int b_hit_i=0;b_hit_i<NbHits;b_hit_i++) {
-    ExtendedHit *myBHit = dynamic_cast<ExtendedHit* > ((*bHits)[b_hit_i]);
-    vec3 b_pos;
-    b_pos.x=(myBHit->hit)->getPosition()[0];
-    b_pos.y=(myBHit->hit)->getPosition()[1];
-    b_pos.z=(myBHit->hit)->getPosition()[2];
-    for(int a_hit_i=0;a_hit_i<NaHits;a_hit_i++) {
-      ExtendedHit *myAHit = dynamic_cast<ExtendedHit* > ((*aHits)[a_hit_i]);
-      vec3 a_pos;
-      a_pos.x=(myAHit->hit)->getPosition()[0];
-      a_pos.y=(myAHit->hit)->getPosition()[1];
-      a_pos.z=(myAHit->hit)->getPosition()[2];
-      double dist=ECALGarlicGeometryHelpers::Get3dDistance(&a_pos,&b_pos);
-      if(dist<smallest_dist)
-	smallest_dist=dist;
-      if(myBHit->pseudoLayer<=firstBPSLayer) {
-	firstBPSLayer=myBHit->pseudoLayer;
-	if(myAHit->pseudoLayer<=firstAPSLayer) {
-	  firstAPSLayer=myAHit->pseudoLayer;
-	  double a_firstDistance = ECALGarlicGeometryHelpers::Get2dProjDistance(&a_pos,&b_pos);
-	  if(a_firstDistance<firstHitDistance) {
-	    firstHitDistance=a_firstDistance;
-	  }
-	}
+double ECALGarlicGeometryHelpers::GetDistToLine(const float* a, const float* l1, const float* l2) {
+  // point a, line between 11, 12
+  // dist = | (a-l1) x (a-l2) | / | (l2-l1) |
+  float d1[3];
+  float d2[3];
+  float d3[3];
+  float cr[3];
+  diff(a, l1, d1);
+  diff(a, l2, d2);
+  diff(l2, l1, d3);
+  cross (d1, d2, cr);
+  return mag(cr)/mag (d3);
+}
+
+void ECALGarlicGeometryHelpers::cross(const float* a, const float* b, float* vec) {
+  vec[0] = a[1]*b[2] - a[2]*b[1];
+  vec[1] = a[2]*b[0] - a[0]*b[2];
+  vec[2] = a[0]*b[1] - a[1]*b[0];
+  return;
+}
+
+float ECALGarlicGeometryHelpers::dot(const float* a, const float* b) {
+  return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+float ECALGarlicGeometryHelpers::mag(const float* a) {
+  return sqrt( pow(a[0], 2)+pow(a[1], 2)+pow(a[2], 2) );
+}
+
+void ECALGarlicGeometryHelpers::diff(const float* a, const float* b, float* vec) {
+  for (int i=0; i<3; i++) vec[i] = a[i]-b[i];
+  return;
+}
+
+void ECALGarlicGeometryHelpers::sum(const float* a, const float* b, float* vec) {
+  for (int i=0; i<3; i++) vec[i] = a[i]+b[i];
+  return;
+}
+
+float ECALGarlicGeometryHelpers::cosangle(const float* a, const float* b) {
+  return dot(a,b)/(mag(a)*mag(b));
+}
+
+float ECALGarlicGeometryHelpers::angle(const float* a, const float* b) {
+  return acos(cosangle(a, b));
+}
+
+float ECALGarlicGeometryHelpers::phi(const float* a) {
+  float ph = atan2(a[1],a[0]);
+  if (ph<0) ph+=2*acos(-1);
+  return ph;
+}
+
+float ECALGarlicGeometryHelpers::costheta(const float* a) {
+  return a[2]/mag(a);
+}
+
+float ECALGarlicGeometryHelpers::theta(const float* a) {
+  return acos(costheta(a));
+}
+
+float ECALGarlicGeometryHelpers::getPseudoLayerRadius(int psLayer) {
+  return ECALGarlicGeometryParameters::Instance().Get_positionBarrelLayer() [psLayer];
+}
+
+
+float ECALGarlicGeometryHelpers::getPseudoLayerDistNormal(int ps1, int ps2) {
+  return ECALGarlicGeometryParameters::Instance().Get_positionBarrelLayer()[ps2] - ECALGarlicGeometryParameters::Instance().Get_positionBarrelLayer()[ps2];
+}
+
+int ECALGarlicGeometryHelpers::getPseudoStave(const float* pos) {
+  return int( (phi(pos) + acos(-1)/ECALGarlicGeometryParameters::Instance().Get_symmetry()) / (2*acos(-1)/ECALGarlicGeometryParameters::Instance().Get_symmetry()) );
+}
+
+float ECALGarlicGeometryHelpers::getPseudoStavePhi(int istave) {
+  return istave*(2*acos(-1)/ECALGarlicGeometryParameters::Instance().Get_symmetry());
+}
+
+void ECALGarlicGeometryHelpers::norm(const float* a, float* norma) {
+  scale(a, mag(a), norma);
+}
+
+void ECALGarlicGeometryHelpers::scale(const float* a, float factor, float* aprime) {
+  for (int i=0; i<3; i++) aprime[i]=a[i]*factor;
+}
+
+float ECALGarlicGeometryHelpers::det(const float* abcd) {
+  /*
+
+  calculate determinant of (  a   b  ) = ad-cb
+                           (  c   d  )
+
+  */
+  return abcd[0]*abcd[3] - abcd[2]*abcd[1];
+}
+
+void ECALGarlicGeometryHelpers::getLineBarrelPseudoLayerIntersection(const float* point1, const float* point2, int pseudolayer, float* intersection) {
+  // get the intersection of 2d line (in xy, linking point1, point2)
+  //  with a particular (barrel) pseudolayer
+
+  // start looking in pseudostave containing first point on line
+  int pstave = getPseudoStave(point1);
+
+  float pt1[2]={0};
+  float pt2[2]={0};
+  float intsec[2];
+  bool gotit(false);
+  for (int dstave=0; dstave<=4; dstave++) { // start looking in same stave, then look further away
+    for (int ipm=0; ipm<2; ipm++) { // look on either side of initial stave
+      if ( (dstave==0 || dstave==4) && ipm>0) continue;      
+      int stave = ipm==0 ? pstave+dstave : pstave-dstave;
+      getPointsOnBarrelPseudoLayer(pseudolayer, pstave, pt1, pt2);
+      get2dLineIntersection(point1, point2, pt1, pt2, intsec);    
+      int intpstave = getPseudoStave(intsec);
+      if (intpstave==stave) {
+	gotit=true;
+	break; // the interaction point is in the considered stave: it's good
       }
     }
+    if (gotit) break;
   }
-  distances[0] = smallest_dist;
-  distances[1] = ECALGarlicGeometryHelpers::Get3dDistance(&a_cog,&b_cog);
-  distances[2] = firstHitDistance;
+
+  if (gotit) {
+    *intersection=*intsec;
+  } else {
+    cout << "ECALGarlicGeometryHelpers::getLineBarrelPseudoLayerIntersection error: " << endl;
+    cout << "could not find pslayer-line intersection" << endl;
+    cout << "plauer = " << pseudolayer << " pt1 = " << point1[0] << " " << point1[1] << " pt2 = " << point2[0] << " " << point2[1] << endl;
+    intersection[0] = -99999;
+    intersection[1] = -99999;
+  }
+  return;
 }
 
 
 
-void ECALGarlicGeometryHelpers::AssignPseudoLayer(ExtendedHit* &a_hit)
-{
-  //again do the same as Pandora except endcap, here psLayer=physical layer
-  const float* pos =(a_hit->hit)->getPosition();
+void ECALGarlicGeometryHelpers::getPointsOnBarrelPseudoLayer(int pslayer, int pseudostave, float* point1, float* point2) {
+  // get two 2d points on a barrel pseudolayer
+
+  // first point is the central one
+  float radius = getPseudoLayerRadius(pslayer);
+  float phi = getPseudoStavePhi(pseudostave);
+
+  point1[0] = radius*cos(phi);
+  point1[1] = radius*sin(phi);
+
+  float vectorInPLayer[2] = {-sin(phi), cos(phi)};
+
+  for (int i=0; i<2; i++) point2[i]=point1[i]+vectorInPLayer[i];
+  return;
+}
+
+
+void  ECALGarlicGeometryHelpers::get2dLineIntersection(const float* p1, const float* p2, const float* p3, const float* p4, float* intersection) {
+  // calculate intersection of 2 lines in 3d
+  //  line 1 has points p1, p2
+  //  line 2 has points p3, p4
+
+  // common denomiator
+  float mat[4];
+  mat[0] = p1[0]-p2[0];
+  mat[1] = p1[1]-p2[1];
+  mat[2] = p3[0]-p4[0];
+  mat[3] = p3[1]-p4[1];
+  float denom = det(mat);
+
+  float temp[4];
+  temp[0] = p1[0];
+  temp[1] = p1[1];
+  temp[2] = p2[0];
+  temp[3] = p2[1];
+  float r1 = det(temp);
   
-  CalorimeterHitZone zone = CALHITZONE_UNKNOWN;
-  double prodRadiusMax=0.;
- 
-  for(int istave = 0; istave < _geomParams->Get_symmetry(); ++istave){
-    double prodRadius = pos[0]*_geomParams->Get_barrelStaveDir()[istave].x+pos[1]*_geomParams->Get_barrelStaveDir()[istave].y;
-    if(prodRadius>prodRadiusMax)prodRadiusMax=prodRadius;
-  }
-  float xhit = fabs(pos[0]);
-  float yhit = fabs(pos[1]);
-  float zhit = fabs(pos[2]);
+  temp[0] = p3[0];
+  temp[1] = p3[1];
+  temp[2] = p4[0];
+  temp[3] = p4[1];
+  float r2 = det(temp);
 
-  if(zhit>_geomParams->Get_zOfBarrel())zone = CALHITZONE_ENDCAP;
-  if(zhit<_geomParams->Get_positionEndcapLayer()[0])zone = CALHITZONE_BARREL;
-  if(zhit>_geomParams->Get_zOfBarrel() && xhit<_geomParams->Get_rInnerEcalEndcap() && yhit<_geomParams->Get_rInnerEcalEndcap()){zone = CALHITZONE_RING;}
-  if(zone==CALHITZONE_UNKNOWN)zone = CALHITZONE_OVERLAP;
+  mat[0] = r1;
+  mat[1] = p1[0]-p2[0];
+  mat[2] = r2;
+  mat[3] = p3[0]-p4[0];
+  intersection[0]=det(mat)/denom;
 
-  a_hit->zone=zone;
+  mat[1] = p1[1]-p2[1];
+  mat[3] = p3[1]-p4[1];
+  intersection[1]=det(mat)/denom;
 
-  int   bestLayer=0;
-  int   bestBarrelLayer=0;
-  double barrelLayerDist = 9999.;
-  int   bestEndcapLayer=0;
-  double endcapLayerDist = 9999.;
-
-  switch(zone){
-  case CALHITZONE_BARREL: 
-    // use barrel layer 
-    for(int ilayer = 0; ilayer <= _geomParams->Get_nPseudoLayers(); ++ilayer){
-      if(fabs(prodRadiusMax-_geomParams->Get_positionBarrelLayer()[ilayer])<barrelLayerDist){
-	barrelLayerDist = fabs(prodRadiusMax-_geomParams->Get_positionBarrelLayer()[ilayer]);
-	bestBarrelLayer = ilayer;
-      }
-    }
-    a_hit->pseudoLayer=bestBarrelLayer;
-    break;
-  case CALHITZONE_ENDCAP: 
-    // use end layer 
-    for(int ilayer = 0; ilayer <= _geomParams->Get_nPseudoLayers(); ++ilayer){
-      if(fabs(zhit-_geomParams->Get_positionEndcapLayer()[ilayer])<endcapLayerDist){
-	endcapLayerDist = fabs(zhit-_geomParams->Get_positionEndcapLayer()[ilayer]);
-	bestEndcapLayer = ilayer;
-      }
-    }
-    a_hit->pseudoLayer=bestEndcapLayer;
-    break;
-  case CALHITZONE_RING: // use the same convention as for the endcap 
-    // use end layer 
-    for(int ilayer = 0; ilayer <= _geomParams->Get_nPseudoLayers(); ++ilayer){
-      if(fabs(zhit-_geomParams->Get_positionEndcapLayer()[ilayer])<endcapLayerDist){
-	endcapLayerDist = fabs(zhit-_geomParams->Get_positionEndcapLayer()[ilayer]);
-	bestEndcapLayer = ilayer;
-      }
-    }
-    a_hit->pseudoLayer=bestEndcapLayer;
-    break;
-  case CALHITZONE_OVERLAP: // NEW: do not assign barrel ps layers
-    for(int ilayer = 0; ilayer <= _geomParams->Get_nPseudoLayers(); ++ilayer){
-      if(fabs(zhit-_geomParams->Get_positionEndcapLayer()[ilayer])<endcapLayerDist){
-	endcapLayerDist = fabs(zhit-_geomParams->Get_positionEndcapLayer()[ilayer]);
-	bestEndcapLayer = ilayer;
-      }
-    }
-    bestLayer = bestEndcapLayer;
-    a_hit->pseudoLayer=bestLayer;
-    break;
-  default:
-    std::cout << " ERROR SHOULD NOT GET HERE " << std::endl;
-    break;
-  }
+  return;
 }
 
 
-void ECALGarlicGeometryHelpers::GetNearestHitInPseudoLayer(int ps_layer,vec3 *seed,ExtendedCluster *preCluster, ExtendedHit* &nearestHit)
-{
-  int NHitsInCluster=(preCluster->hitVec).size();
-  double minDist = 9999;
-  vector<ExtendedHit* > &hits=preCluster->hitVec;
-  //nearestHit = NULL;
-  for( int hit_i = 0; hit_i<NHitsInCluster; hit_i++ ) {
-    ExtendedHit *a_ext_hit= hits[hit_i];
-    if(a_ext_hit) {
-      if(a_ext_hit->clusterHitVec!=0 || a_ext_hit->pseudoLayer!=ps_layer) continue;
-      vec3 hitPos;
-      hitPos.x=a_ext_hit->hit->getPosition()[0];
-      hitPos.y=a_ext_hit->hit->getPosition()[1];
-      hitPos.z=a_ext_hit->hit->getPosition()[2];
-      double dist=ECALGarlicGeometryHelpers::Get2dProjDistance(&hitPos,seed);
-      if(dist<minDist && (fabs(hitPos.z-seed->z)<(_geomParams->Get_zOfEndcap()-_geomParams->Get_zOfBarrel())))  {
-	minDist=dist;
-	nearestHit=a_ext_hit;
-      }
-    }
-  }
-  if(nearestHit==0) {
-    if(_algoParams->GetDebug()>2)
-      cout << "No hit found in layer " << ps_layer << endl;
-  }
-  else {
-    if(_algoParams->GetDebug()>2) {
-      vec3 hitPos;
-      hitPos.x=nearestHit->hit->getPosition()[0];
-      hitPos.y=nearestHit->hit->getPosition()[1];
-      hitPos.z=nearestHit->hit->getPosition()[2];
-      cout << "Nearest Hit is " << nearestHit->hit->getCellID0() << " at (" << hitPos.x << ", " << hitPos.y << ", " << hitPos.z << ") in pseudo layer " << ps_layer << endl;
-    }
-  }
-}
+void ECALGarlicGeometryHelpers::get3dLinePlaneIntersection(const float* planePoint, const float* planeNormal, 
+							   const float* linePoint, const float* lineDirection, 
+							   float* intersection) {
 
+  // point in plane p
+  // defn of plane:
+  //          (p-planePoint).planeNormal = 0
+  // point on line q
+  // defn of line:
+  //          q = linePoint + d*lineDirection
+  // at intersection
+  //   (linePoint + d*lineDirection - planePoint).planeNormal = 0
+  // d = (planePoint-linePoint).planeNormal / lineDirection.planeNormal;
+
+  float pl[3];
+  for (int i=0; i<3; i++) pl[i] = planePoint[i] - linePoint[i];
+
+  float pldotnorm(0);
+  for (int i=0; i<3; i++) pldotnorm+=pl[i]*planeNormal[i];
+
+  float dirdotnorm(0);
+  for (int i=0; i<3; i++) dirdotnorm+=lineDirection[i]*planeNormal[i];
+
+  float d = pldotnorm/dirdotnorm;
+
+  for (int i=0; i<3; i++) intersection[i] = linePoint[i] + d*lineDirection[i];
+
+  return;
+}
