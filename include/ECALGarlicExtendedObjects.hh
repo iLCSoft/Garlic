@@ -108,7 +108,7 @@ namespace ECALGarlicExtendedObjects {
     }
     ~GhostCluster() {
       if (_ghostHitVec.size()>0) {
-	for (uint i=0; i<_ghostHitVec.size(); i++) {
+	for (size_t i=0; i<_ghostHitVec.size(); i++) {
 	  delete _ghostHitVec[i];
 	}
 	_ghostHitVec.clear();
