@@ -66,6 +66,11 @@ V 2-0
 -----
 tidy up, rewrite...(Daniel Jeans)
 
+V 2-1
+-----
+further tidy up & rewrite...(Daniel Jeans)
+new NN variables and trainings
+
 */
 
 
@@ -132,9 +137,9 @@ using namespace std;
 
 ECALGarlic anECALGarlic;
 
-ECALGarlic::ECALGarlic() : Processor("ECALGarlic_v30") {
+ECALGarlic::ECALGarlic() : Processor("ECALGarlic") {
 
-  streamlog_out ( MESSAGE ) << "hello from ECALGarlic v3_0 constructor " << this << std::endl;
+  streamlog_out ( MESSAGE ) << "hello from ECALGarlic constructor " << this << std::endl;
 
   // processor description
   _description = "Clustering and photon recognition";
@@ -297,7 +302,7 @@ ECALGarlic::ECALGarlic() : Processor("ECALGarlic_v30") {
 
   // clustering
   registerProcessorParameter("ClusterNIterations",
-			     "Number of Iterations to apply the neighbpuring criterion.",
+			     "Number of Iterations to apply the neighbouring criterion.",
 			     _x_nIterations,
 			     int(3));
 
@@ -333,10 +338,6 @@ ECALGarlic::ECALGarlic() : Processor("ECALGarlic_v30") {
 			     _x_mlpCuts.size() 
 			     );
 
-
-
-
-
   registerProcessorParameter("DebugMode",
 			     "Talk a lot? (0-3)",
 			     _x_debug,
@@ -364,15 +365,6 @@ ECALGarlic::ECALGarlic() : Processor("ECALGarlic_v30") {
 			     "Offset ECAL Layers to match reconstructed hits",
 			     _x_firstBarrelLayerOffset,
 			     float(-5.14));
-
-  registerProcessorParameter("NCellsPerWafer",
-			     "Number of cells along one edge of a square wafer",
-			     _x_nCellsPerWafer,
-			     int(18));
-
-  registerProcessorParameter("absorberX0", "radiation length of absorber (mm)",
-			     _x_absorberX0, float(3.5));
-
 
   registerProcessorParameter("clusterCheckHistoFile", "name of file in which to save clustering histograms",
                              _histFileName, std::string(""));
@@ -1130,9 +1122,7 @@ void ECALGarlic::setUpGeometry() {
   setup();
 
   // size of dead zones, ncells, si thickness, (not in GEAR file, specified in steering file...)
-  ECALGarlicGeometryParameters::Instance().Set_nCellsPerWafer  (_x_nCellsPerWafer);
   ECALGarlicGeometryParameters::Instance().Set_activeThickness (_x_activeThickness);
-  ECALGarlicGeometryParameters::Instance().Set_absorberRadiationLength(_x_absorberX0);
   ECALGarlicGeometryParameters::Instance().Set_defaultDecoder  (NULL);
 
   // b field

@@ -36,7 +36,7 @@ using namespace std;
 
 ECALPreClustering anECALPreClustering;
 
-ECALPreClustering::ECALPreClustering() : Processor("ECALPreClustering_v30") {
+ECALPreClustering::ECALPreClustering() : Processor("ECALPreClustering") {
 
   // processor description
   _description = "Preclusters ECAL hits to define ROIs for Garlic";
@@ -159,8 +159,6 @@ float ECALPreClustering::GetDistance(float *a_pos,float *s_pos)
 
 void ECALPreClustering::PrepareHits(const LCEvent *evt, vector<ExtendedHit* > &hitVec) {
 
-  /*
-
   for (size_t ic=0; ic<_ecalHitCollNames.size(); ic++) {
     string colname = _ecalHitCollNames[ic];
     LCCollection *hitColl = 0;
@@ -205,8 +203,6 @@ void ECALPreClustering::PrepareHits(const LCEvent *evt, vector<ExtendedHit* > &h
   //   // sort hits by energy deposit
   if(hitVec.size()>0)
     sort(hitVec.begin(),hitVec.end(),ExtendedHit::higherEnergy);
-
-  */
 
   return;
 }
