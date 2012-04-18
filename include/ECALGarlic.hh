@@ -125,14 +125,12 @@ private:
   float _x_seedEnergyCut;
   float _x_seedDistanceCut;
 
-
   int   _x_nlayersSection1;
   int   _x_maxHoleSection1;
   int   _x_maxHoleSection2;
 
   float _x_mergeTouchFrac;
   int   _x_initialLayerSeparation;
-
 
   int    _x_nIterations;
 
@@ -141,39 +139,14 @@ private:
 
   float _x_trackWindowVeto;
 
-
-  double _x_rOfBarrel;
-  double _x_zOfBarrel;
-  double _x_rOfEndcap;
-  double _x_zOfEndcap;
   float  _x_activeThickness;
   float  _x_passiveThickness;
   float  _x_firstEndcapLayerOffset;
   float  _x_firstBarrelLayerOffset;
-  float  _x_bField;
-  float  _x_positionBarrelLayer[MAX_NUMBER_OF_LAYERS];
-  float  _x_absThicknessBarrelLayer[MAX_NUMBER_OF_LAYERS];
-  float  _x_absThicknessEndcapLayer[MAX_NUMBER_OF_LAYERS];
-  float  _x_padSizeEcal[MAX_NUMBER_OF_LAYERS];
-  float  _x_positionEndcapLayer[MAX_NUMBER_OF_LAYERS];
-  float  _x_rInnerEcalEndcap;
-  float  _x_cosOfBarrel;
-  float  _x_guardringSize;
-  float  _x_fiberSize;
-  float  _x_fiberSizeModule;
-  float _x_absorberX0;
-  int    _x_symmetry;
-  int    _x_nPseudoLayers;
-  int    _x_nCellsPerWafer;
-  int    _x_nBarEcalLayers;
-  int    _x_nEndEcalLayers;
-
-  std::vector< std::vector < float > > _x_barrelStaveDir;
 
   CellIDDecoder<CalorimeterHit>* _x_defaultDecoder;
 
   bool _geomSetup;
-
   TFile* _fhistos;
   string _histFileName;
   int _nSaveHist;

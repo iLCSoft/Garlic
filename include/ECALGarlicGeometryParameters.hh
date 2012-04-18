@@ -31,7 +31,6 @@ public:
   void Set_cosOfBarrel (float f) {_cosOfBarrel=f;}
   void Set_symmetry (int   f) {_symmetry=f;}
   void Set_nPseudoLayers (int   f) {_nPseudoLayers=f;}
-  void Set_nCellsPerWafer (int   f) {_nCellsPerWafer=f;}
 
   void Set_nBarrelEcalLayers (int it) {_nBarrelEcalLayers=it;}
   void Set_nEndcapEcalLayers (int it) {_nEndcapEcalLayers=it;}
@@ -76,7 +75,6 @@ public:
   float Get_cosOfBarrel () {return _cosOfBarrel;}
   int   Get_symmetry () {return _symmetry;}
   int   Get_nPseudoLayers () {return _nPseudoLayers;}
-  int   Get_nCellsPerWafer () {return _nCellsPerWafer;}
   float Get_absorberRadiationLength () {return _absorberRadiationLength;}
 
   int Get_nBarrelEcalLayers () {return _nBarrelEcalLayers;}
@@ -120,7 +118,6 @@ private:
 
   int _symmetry;
   int _nPseudoLayers;
-  int _nCellsPerWafer;
 
   int _nBarrelEcalLayers;
   int _nEndcapEcalLayers;
@@ -149,7 +146,6 @@ private:
     _cosOfBarrel=-999;
     _symmetry=-999;
     _nPseudoLayers=-999;
-    _nCellsPerWafer=-999;
     _absorberRadiationLength=-999;
   }
 
