@@ -9,7 +9,7 @@
 
 #include <iostream>
 #include <assert.h>
-#include <math.h>
+#include <cmath>
 
 using std::cout;
 using std::endl;

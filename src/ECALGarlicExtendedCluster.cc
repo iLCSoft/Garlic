@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 #include <assert.h>
 
 #include <UTIL/LCRelationNavigator.h>
@@ -919,7 +919,7 @@ void ExtendedCluster2::calculateMCnature() {
 MCParticle* ExtendedCluster2::lastGeneratedMCAncestor( MCParticle* mcp ) {
   MCParticle* genAnc(0);
   MCParticleVec ancs = allMCAncestors(mcp);
-  for (uint i=0; i<ancs.size(); i++) {
+  for (size_t i=0; i<ancs.size(); i++) {
     MCParticle* mc = ancs[i];
     if (!mc->isCreatedInSimulation()) {
       genAnc=mc;
@@ -933,7 +933,7 @@ MCParticle* ExtendedCluster2::lastGeneratedMCAncestor( MCParticle* mcp ) {
 MCParticle* ExtendedCluster2::firstDecInCaloMCAncestor( MCParticle* mcp ) {
   MCParticle* lastDecInCalo(0);
   MCParticleVec ancs = allMCAncestors(mcp);
-  for (uint i=0; i<ancs.size(); i++) {
+  for (size_t i=0; i<ancs.size(); i++) {
     MCParticle* mc = ancs[i];
     if (mc->isDecayedInCalorimeter()) {
       lastDecInCalo=mc;
@@ -947,7 +947,7 @@ MCParticle* ExtendedCluster2::firstDecInCaloMCAncestor( MCParticle* mcp ) {
 MCParticleVec ExtendedCluster2::generatedDecInCaloMCAncestors( MCParticle* mcp ) {
   MCParticleVec ancs = allMCAncestors(mcp);
   MCParticleVec genDecInCalo;
-  for (uint i=0; i<ancs.size(); i++) {
+  for (size_t i=0; i<ancs.size(); i++) {
     MCParticle* mc = ancs[i];
     if (!mc->isCreatedInSimulation() && mc->isDecayedInCalorimeter()) genDecInCalo.push_back(mc);
   }
@@ -961,13 +961,13 @@ MCParticleVec ExtendedCluster2::allMCAncestors( MCParticle* mcp ) {
   temp.push_back(mcp);
   while (1) {
     MCParticleVec temp2;
-    for (uint i=0; i<temp.size(); i++) {
+    for (size_t i=0; i<temp.size(); i++) {
       MCParticle* mc = temp[i];
       int pdg = abs(mc->getPDG());
       if ( ! (pdg<=6 || pdg==92 ) ) {
 	ancs.push_back(mc);
 	MCParticleVec pars = mc->getParents();
-	for (uint j=0; j<pars.size(); j++) {
+	for (size_t j=0; j<pars.size(); j++) {
 	  temp2.push_back(pars[j]);
 	}
       }
