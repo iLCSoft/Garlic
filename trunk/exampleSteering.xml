@@ -1,0 +1,89 @@
+<marlin>
+
+ <execute>
+  <!-- processor name="MyMaterialDB"/ -->
+  <processor name="EmcPreCluster"/>
+  <processor name="EmcGarlic"/> 
+  <processor name="MyLCIOOutputProcessor"/>
+ </execute>
+    
+ <global>
+  <parameter name="LCIOInputFiles">
+./REC_SIM01-13-04-pre00_ILD_O1_v02_4f_ww_h_100evt_13.slcio
+  </parameter>
+  <parameter name="GearXMLFile" value="./GearOutput_ILD_O1_v02.xml"/>
+  <parameter name="MaxRecordNumber" value="5"/>
+  <parameter name="SkipNEvents" value="0"/>
+  <parameter name="SupressCheck" value="false"/>
+ </global>
+
+ <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+  <parameter name="LCIOOutputFile" type="string" >
+test_garlic.slcio
+  </parameter>
+  <parameter name="SplitFileSizekB" type="int" value="1992294"/>
+ </processor>
+
+ <processor name="MyMaterialDB" type="MaterialDB">
+  <!--Material DB builder...-->
+  <parameter name="UseExtrapolations" type="int" value="1"/>
+  <parameter name="UseMaterials" type="int" value="1"/>
+ </processor>
+
+ <!--######  EmcPreCluster ##########################################-->
+ <processor name="EmcPreCluster" type="ECALPreClustering">
+
+  <!-- input collections -->
+  <parameter name="EcalEndcapHitCollection"  type="string"> ECALEndcap </parameter>
+  <parameter name="EcalBarrelHitCollection"  type="string"> ECALBarrel </parameter>
+  <parameter name="EcalOtherHitCollection"   type="string"> ECALOther </parameter>
+
+  <!-- algorithm parameters -->
+  <parameter name="DistanceCut" type="float">200. </parameter>
+  <parameter name="MinimumHits" type="int">5 </parameter>
+  <parameter name="Debug" type="int"> 0 </parameter>
+
+  <!-- output collection -->
+  <parameter name="EcalPreClusterCollection" type="string"> ECAL_PreClusters </parameter>
+ </processor>
+
+ <!--######  EmcGarlic ##########################################-->
+ <processor name="EmcGarlic" type="ECALGarlic">
+
+  <parameter name="Verbosity" type="string"> ERROR </parameter>
+  <parameter name="DebugMode" type="int"> 0 </parameter>
+
+  <!-- parameter name="clusterCheckHistoFile" type="string"> projHistos_uusmall.root </parameter -->
+
+  <!-- input collections -->
+  <parameter name="EcalPreClusterCollection" type="string">ECAL_PreClusters </parameter>
+  <parameter name="LDCTrackCollection" type="string"> MarlinTrkTracks </parameter>
+  <parameter name="MCParticleCollection" type="string"> MCParticle </parameter>
+
+  <!-- parameter name="SeedCollName" type="string"> IGNORE </parameter -->
+
+  <parameter name="TrackCheat"            type="int"   > 0   </parameter>
+  <parameter name="TrackRemoveNearbyHits" type="bool"  > true</parameter>
+  <parameter name="TrackVetoWindow"       type="float" > 10. </parameter>
+
+  <parameter name="SeedNLayers"           type="int"   > 12  </parameter>
+  <parameter name="SeedMaxDistance"       type="float" > 15. </parameter>
+  <parameter name="SeedMinHitEnergy"      type="float" > 2.5 </parameter>
+  <parameter name="SeedMinHits"           type="int"   > 2   </parameter>
+  <parameter name="SeedMinEnergy"         type="float" > 5. </parameter>
+
+  <parameter name="CoreNlayersSection1"   type="int"   > 16  </parameter>
+  <parameter name="CoreMaxHoleSection1"   type="int"   > 3   </parameter>
+  <parameter name="CoreMaxHoleSection2"   type="int"   > 2   </parameter>
+
+  <parameter name="ClusterNIterations"    type="int"   > 5   </parameter>
+
+  <parameter name="MergeTouchFrac"        type="float" > 0.7 </parameter>
+  <parameter name="MergeInitSepVeto"      type="int"   > 4   </parameter>
+
+  <parameter name="RejectClustersByMLPCut" type="bool"> 0 </parameter>
+  <parameter name="MLPCuts" type="vector<float>"> 0.5 0.5 0.5 0.5 0.5 0.5 </parameter>
+
+ </processor>
+
+</marlin>
