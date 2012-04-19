@@ -233,7 +233,7 @@ class ReadMLP_Garlic_en02_05_notrkAllbck : public IClassifierReader {
 
 */
 
-inline void ReadMLP_Garlic_en02_05_notrkAllbck::Initialize()
+void ReadMLP_Garlic_en02_05_notrkAllbck::Initialize()
 {
    // build network structure
    fLayers = 3;
@@ -317,7 +317,7 @@ inline void ReadMLP_Garlic_en02_05_notrkAllbck::Initialize()
    fWeightMatrix1to2[0][8] = -0.0774450302124023;
 }
 
-inline double ReadMLP_Garlic_en02_05_notrkAllbck::GetMvaValue__( const std::vector<double>& inputValues ) const
+ double ReadMLP_Garlic_en02_05_notrkAllbck::GetMvaValue__( const std::vector<double>& inputValues ) const
 {
    if (inputValues.size() != (unsigned int)fLayerSize[0]-1) {
       std::cout << "Input vector needs to be of size " << fLayerSize[0]-1 << std::endl;
@@ -363,11 +363,11 @@ double ReadMLP_Garlic_en02_05_notrkAllbck::OutputActivationFnc(double x) const {
 }
    
 // Clean up
-inline void ReadMLP_Garlic_en02_05_notrkAllbck::Clear() 
+ void ReadMLP_Garlic_en02_05_notrkAllbck::Clear() 
 {
    // nothing to clear
 }
-   inline double ReadMLP_Garlic_en02_05_notrkAllbck::GetMvaValue( const std::vector<double>& inputValues ) const
+    double ReadMLP_Garlic_en02_05_notrkAllbck::GetMvaValue( const std::vector<double>& inputValues ) const
    {
       // classifier response value
       double retval = 0;
@@ -406,7 +406,7 @@ inline void ReadMLP_Garlic_en02_05_notrkAllbck::Clear()
    }
 
 //_______________________________________________________________________
-inline void ReadMLP_Garlic_en02_05_notrkAllbck::InitTransform_1()
+ void ReadMLP_Garlic_en02_05_notrkAllbck::InitTransform_1()
 {
     xmin[0][0]=0.000913490599486977;
     xmax[0][0]=1.57094419002533;
@@ -21474,7 +21474,7 @@ inline void ReadMLP_Garlic_en02_05_notrkAllbck::InitTransform_1()
 }
 
 //_______________________________________________________________________
-inline void ReadMLP_Garlic_en02_05_notrkAllbck::Transform_1( std::vector<double>& iv, int cls) const
+ void ReadMLP_Garlic_en02_05_notrkAllbck::Transform_1( std::vector<double>& iv, int cls) const
 {
    if (cls < 0 || cls > 2) {
        if (2 > 1 ) cls = 2;
@@ -21514,13 +21514,13 @@ inline void ReadMLP_Garlic_en02_05_notrkAllbck::Transform_1( std::vector<double>
 }
 
 //_______________________________________________________________________
-inline void ReadMLP_Garlic_en02_05_notrkAllbck::InitTransform()
+ void ReadMLP_Garlic_en02_05_notrkAllbck::InitTransform()
 {
    InitTransform_1();
 }
 
 //_______________________________________________________________________
-inline void ReadMLP_Garlic_en02_05_notrkAllbck::Transform( std::vector<double>& iv, int sigOrBgd ) const
+ void ReadMLP_Garlic_en02_05_notrkAllbck::Transform( std::vector<double>& iv, int sigOrBgd ) const
 {
    Transform_1( iv, sigOrBgd );
 }

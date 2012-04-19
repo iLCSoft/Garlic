@@ -17,8 +17,6 @@ using std::vector;
 using std::multimap;
 using std::string;
 
-class lcio::CalorimeterHit;
-
 class ECALPreClustering : public marlin::Processor {
 
  public:

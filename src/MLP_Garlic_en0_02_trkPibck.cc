@@ -243,7 +243,7 @@ class ReadMLP_Garlic_en0_02_trkPibck : public IClassifierReader {
 
 */
 
-inline void ReadMLP_Garlic_en0_02_trkPibck::Initialize()
+void ReadMLP_Garlic_en0_02_trkPibck::Initialize()
 {
    // build network structure
    fLayers = 3;
@@ -365,7 +365,7 @@ inline void ReadMLP_Garlic_en0_02_trkPibck::Initialize()
    fWeightMatrix1to2[0][10] = 0.147185668349266;
 }
 
-inline double ReadMLP_Garlic_en0_02_trkPibck::GetMvaValue__( const std::vector<double>& inputValues ) const
+double ReadMLP_Garlic_en0_02_trkPibck::GetMvaValue__( const std::vector<double>& inputValues ) const
 {
    if (inputValues.size() != (unsigned int)fLayerSize[0]-1) {
       std::cout << "Input vector needs to be of size " << fLayerSize[0]-1 << std::endl;
@@ -411,11 +411,12 @@ double ReadMLP_Garlic_en0_02_trkPibck::OutputActivationFnc(double x) const {
 }
    
 // Clean up
-inline void ReadMLP_Garlic_en0_02_trkPibck::Clear() 
+void ReadMLP_Garlic_en0_02_trkPibck::Clear() 
 {
    // nothing to clear
 }
-   inline double ReadMLP_Garlic_en0_02_trkPibck::GetMvaValue( const std::vector<double>& inputValues ) const
+
+double ReadMLP_Garlic_en0_02_trkPibck::GetMvaValue( const std::vector<double>& inputValues ) const
    {
       // classifier response value
       double retval = 0;
@@ -454,7 +455,7 @@ inline void ReadMLP_Garlic_en0_02_trkPibck::Clear()
    }
 
 //_______________________________________________________________________
-inline void ReadMLP_Garlic_en0_02_trkPibck::InitTransform_1()
+void ReadMLP_Garlic_en0_02_trkPibck::InitTransform_1()
 {
     xmin[0][0]=0.00204262742772698;
     xmax[0][0]=1.57096803188324;
@@ -27540,7 +27541,7 @@ inline void ReadMLP_Garlic_en0_02_trkPibck::InitTransform_1()
 }
 
 //_______________________________________________________________________
-inline void ReadMLP_Garlic_en0_02_trkPibck::Transform_1( std::vector<double>& iv, int cls) const
+void ReadMLP_Garlic_en0_02_trkPibck::Transform_1( std::vector<double>& iv, int cls) const
 {
    if (cls < 0 || cls > 2) {
        if (2 > 1 ) cls = 2;
@@ -27580,13 +27581,13 @@ inline void ReadMLP_Garlic_en0_02_trkPibck::Transform_1( std::vector<double>& iv
 }
 
 //_______________________________________________________________________
-inline void ReadMLP_Garlic_en0_02_trkPibck::InitTransform()
+void ReadMLP_Garlic_en0_02_trkPibck::InitTransform()
 {
    InitTransform_1();
 }
 
 //_______________________________________________________________________
-inline void ReadMLP_Garlic_en0_02_trkPibck::Transform( std::vector<double>& iv, int sigOrBgd ) const
+void ReadMLP_Garlic_en0_02_trkPibck::Transform( std::vector<double>& iv, int sigOrBgd ) const
 {
    Transform_1( iv, sigOrBgd );
 }
