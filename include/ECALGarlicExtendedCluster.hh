@@ -2,7 +2,7 @@
 #define ECALGARLICEXTENDEDCLUSTER_HH_
 
 #include <vector>
-// #include <ClusterParameters.hh>
+#include <algorithm>
 #include <HelixClass.h>
 
 #include "EVENT/CalorimeterHit.h"

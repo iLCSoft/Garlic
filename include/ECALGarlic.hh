@@ -25,10 +25,6 @@ using namespace ECALGarlicExtendedObjects;
 
 class TTree;
 
-class lcio::CalorimeterHit;
-class lcio::ClusterImpl;
-class lcio::Track;
-
 class ECALGarlicCluster;
 
 class ExtendedCluster2;
