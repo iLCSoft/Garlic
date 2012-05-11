@@ -139,7 +139,7 @@ ECALGarlic anECALGarlic;
 
 ECALGarlic::ECALGarlic() : Processor("ECALGarlic") {
 
-  streamlog_out ( MESSAGE ) << "hello from ECALGarlic constructor " << this << std::endl;
+  streamlog_out ( DEBUG1 ) << "hello from ECALGarlic constructor " << this << std::endl;
 
   // processor description
   _description = "Clustering and photon recognition";
@@ -378,7 +378,7 @@ ECALGarlic::ECALGarlic() : Processor("ECALGarlic") {
 
 
 ECALGarlic::~ECALGarlic() {
-  streamlog_out ( MESSAGE ) << "hello from ECALGarlic destructor " << this << std::endl;
+  streamlog_out ( DEBUG1 ) << "hello from ECALGarlic destructor " << this << std::endl;
 
   if (_clusterer) {delete _clusterer; _clusterer=NULL;}
   if (_fhistos) {delete _fhistos; _fhistos=NULL;}
@@ -386,14 +386,14 @@ ECALGarlic::~ECALGarlic() {
 }
 
 void ECALGarlic::init() {
-  streamlog_out ( MESSAGE ) << "hello from ECALGarlic init() " << this << std::endl;
+  streamlog_out ( DEBUG1 ) << "hello from ECALGarlic init() " << this << std::endl;
 
 }
 
 void ECALGarlic::setup()
 {
 
-  cout << "hello from ECALGarlic::setup() " << endl;
+  streamlog_out ( DEBUG1 ) << "hello from ECALGarlic::setup() " << std::endl;
 
   printMrGarlic();
   printParameters();
@@ -454,9 +454,7 @@ void ECALGarlic::processEvent(LCEvent * evt)   // main !
 {
   streamlog_out ( DEBUG1 ) << endl << "Event: " << evt->getEventNumber() << endl;
   if(evt->getEventNumber()%100==0)
-    streamlog_out ( MESSAGE ) << endl << "Event: " << evt->getEventNumber() << endl;
-
-  cout << "Event: " << evt->getEventNumber() << endl;
+    streamlog_out ( DEBUG1 ) << endl << "Event: " << evt->getEventNumber() << endl;
 
   // set up the detector geometry
   if (!_geomSetup) {
@@ -739,7 +737,7 @@ void ECALGarlic::processEvent(LCEvent * evt)   // main !
 	PDG="other";
 	MCotherClusterColl->addElement(climp);
 	if (pdg!=-999) 
-	  cout << "undefined pdg " << pdg << endl;
+	  streamlog_out( DEBUG ) << "undefined pdg " << pdg << endl;
 	break;
       }
       
@@ -1212,7 +1210,6 @@ void ECALGarlic::setUpGeometry() {
   for (int i=0; i<MAX_NUMBER_OF_LAYERS; i++) positions[i]=0;
   for (int i=0; i<ecalEndcapLayout.getNLayers(); i++) {
     positions[i] = ecalEndcapLayout.getDistance(i) + ecalEndcapLayout.getThickness(i)/2;
-    //    cout << "endcap position " << i << " " << positions[i] << endl;
   }
   positions[ecalEndcapLayout.getNLayers()] = positions[ecalEndcapLayout.getNLayers()-1] + ecalEndcapLayout.getThickness(ecalEndcapLayout.getNLayers()-1);
 
