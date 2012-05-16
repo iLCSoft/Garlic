@@ -98,22 +98,22 @@ void ECALPreClustering::processEvent(LCEvent * evt)
 {
   _nEvents++;
   _nPreClustersInEvent=0;
-  if(_debug>1 || evt->getEventNumber()%200==0) {
-    cout << endl << "Preclustering Event " << evt->getEventNumber() << endl;
+  if(evt->getEventNumber()%200==0) {
+    streamlog_out(DEBUG) << endl << "Preclustering Event " << evt->getEventNumber() << endl;
   }
 
   vector<ExtendedHit* > hitVec;
   multimap<int,ClusterImpl* > preClusVec;
   
-  if(_debug>2) cout << "Preparing Hits..." << endl;
+  streamlog_out(DEBUG) << "Preparing Hits..." << endl;
   // prepare hits for easier clustering
   PrepareHits(evt,hitVec);
 
-  if(_debug>2) cout << "Preclustering Hits..." << endl;
+  streamlog_out(DEBUG) << "Preclustering Hits..." << endl;
   // begin PreClustering:
   PreCluster(hitVec, preClusVec);
 
-  if(_debug>2) cout << "Writing Collections..." << endl;
+  streamlog_out(DEBUG) << "Writing Collections..." << endl;
   // write PreClusters to as LC collection
   WritePreClusters(evt, preClusVec);
 
@@ -134,12 +134,11 @@ void ECALPreClustering::check(LCEvent * evt)
 
 void ECALPreClustering::end()
 {
-  cout << endl;
-  cout << "ECALPreClustering Report: " << endl;
-  cout << _nEvents << " events processed" << endl;
-  cout << "Found " << _nPreClusters << " PreCluster" << endl;
+  streamlog_out(MESSAGE) << endl << "ECALPreClustering Report: " << endl;
+  streamlog_out(MESSAGE) << _nEvents << " events processed" << endl;
+  streamlog_out(MESSAGE) << "Found " << _nPreClusters << " PreCluster" << endl;
   if (_nEvents>0)
-    cout << "= " << _nPreClusters/_nEvents  << " /event" << endl;
+    streamlog_out(MESSAGE) << "= " << _nPreClusters/_nEvents  << " /event" << endl;
   return;
 }
 
@@ -170,7 +169,7 @@ void ECALPreClustering::PrepareHits(const LCEvent *evt, vector<ExtendedHit* > &h
 	  _decodeString=hitColl->getParameters().getStringVal("CellIDEncoding");
 
 	int NHits = hitColl->getNumberOfElements();
-	if(_debug>1) cout << colname << " hit Collection has " << NHits << " hits" << endl;
+	streamlog_out(DEBUG) << colname << " hit Collection has " << NHits << " hits" << endl;
 	for (int hit_i = 0; hit_i < NHits; hit_i++) {
 	  CalorimeterHit *a_hit = dynamic_cast<CalorimeterHit*>( hitColl->getElementAt(hit_i) );
 
@@ -185,7 +184,7 @@ void ECALPreClustering::PrepareHits(const LCEvent *evt, vector<ExtendedHit* > &h
 	}
       }
       else
-	if (_debug>0) cout << "No hits found in collection " << colname << endl;
+	streamlog_out(DEBUG)  << "No hits found in collection " << colname << endl;
 
     }
     catch(DataNotAvailableException &exc) {
@@ -197,7 +196,7 @@ void ECALPreClustering::PrepareHits(const LCEvent *evt, vector<ExtendedHit* > &h
   }
 
   
-  if(_debug>2) cout << "New extended Hit vector has " << hitVec.size() << " hits" << endl;
+  streamlog_out(DEBUG) << "New extended Hit vector has " << hitVec.size() << " hits" << endl;
 
   // daniel decides this is completely superfluous
   //   // sort hits by energy deposit
@@ -217,13 +216,11 @@ void ECALPreClustering::PreCluster( vector<ExtendedHit* > &hitVec, multimap<int,
   for(source_it=hitVec.begin();source_it!=hitVec.end();source_it++) {
     if(!((*source_it)->isClustered)) {   // if non-clustered start clustering
       ClusterImpl *a_cluster = new ClusterImpl();  // open new cluster 
-      if(_debug>2) 
-	cout << "Opened a new cluster with hit " << (*source_it)->hit->getCellID0() << " as source" << endl;
+      streamlog_out(DEBUG) << "Opened a new cluster with hit " << (*source_it)->hit->getCellID0() << " as source" << endl;
       a_cluster->addHit((*source_it)->hit,1);
       (*source_it)->isClustered = true;
       ClusterNearHits(*source_it, hitVec, *a_cluster);
-      if(_debug>2) 
-	cout << "This Cluster has now " << (a_cluster->getCalorimeterHits()).size() << " hits" << endl;
+      streamlog_out(DEBUG)  << "This Cluster has now " << (a_cluster->getCalorimeterHits()).size() << " hits" << endl;
       int nHits = (a_cluster->getCalorimeterHits()).size();
       preClusVec.insert(make_pair(nHits,a_cluster));
     }
@@ -244,8 +241,7 @@ void ECALPreClustering::ClusterNearHits(ExtendedHit *s_hit, vector<ExtendedHit* 
       float a_pos[3]={apos[0],apos[1],apos[2]};
       float dist=GetDistance(s_pos,a_pos);
       if(dist < _distanceCut) {
-	if(_debug>2) 
-	  cout << "Now clustering hit " << (*hit_it)->hit->getCellID0() << " with distance " << dist << " from hit " << s_hit->hit->getCellID0() << endl;
+	streamlog_out(DEBUG) << "Now clustering hit " << (*hit_it)->hit->getCellID0() << " with distance " << dist << " from hit " << s_hit->hit->getCellID0() << endl;
 	(*hit_it)->isClustered=true;
 	cluster.addHit((*hit_it)->hit,1);
 	ClusterNearHits((*hit_it), hits, cluster);
@@ -268,19 +264,17 @@ void ECALPreClustering::WritePreClusters(LCEvent *evt, multimap<int,ClusterImpl*
   multimap<int,ClusterImpl*>::reverse_iterator preClusIt;
   for (preClusIt=preClusVec.rbegin();preClusIt!=preClusVec.rend() ; preClusIt++) {
     if(preClusIt->first>=_minHits) {
-      if(_debug>2) 
-	cout << "Adding PreCluster with " << (preClusIt->first) << " hits" << endl;
+      streamlog_out(DEBUG) << "Adding PreCluster with " << (preClusIt->first) << " hits" << endl;
       preClusterColl->addElement(preClusIt->second);
       _nPreClusters ++;
       _nPreClustersInEvent++;
     }
   }
-  if(_debug>2) 
-    cout << preClusterColl->getNumberOfElements() << " PreClusters in event " << evt->getEventNumber() << endl;
+  streamlog_out(DEBUG) << preClusterColl->getNumberOfElements() << " PreClusters in event " << evt->getEventNumber() << endl;
 
   if (preClusterColl->getNumberOfElements() > 0) {
     evt->addCollection(preClusterColl, _ecalPreClusterCollectionName);
-    if(_debug>2) cout << "PreCluster Collection written!" << endl;
+    streamlog_out(DEBUG) << "PreCluster Collection written!" << endl;
   }
   return;
 }

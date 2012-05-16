@@ -17,7 +17,8 @@ using std::endl;
 ECALGarlicTrainer anECALGarlicTrainer;
 
 ECALGarlicTrainer::ECALGarlicTrainer() : Processor("ECALGarlicTrainer") {
-  std::cout << "hello from ECALGarlicTrainer constructor " << this << std::endl;
+
+  streamlog_out ( DEBUG1 ) << "hello from ECALGarlicTrainer constructor " << this << std::endl;
 
 
   // input pre-clusters
@@ -54,7 +55,7 @@ ECALGarlicTrainer::ECALGarlicTrainer() : Processor("ECALGarlicTrainer") {
 
 
 ECALGarlicTrainer::~ECALGarlicTrainer() {
-  std::cout << "hello from ECALGarlicTrainer destructor " << this << std::endl;
+  streamlog_out ( DEBUG1 ) << "hello from ECALGarlicTrainer destructor " << this << std::endl;
 }
 
 void ECALGarlicTrainer::init()
@@ -372,7 +373,7 @@ void ECALGarlicTrainer::processEvent(LCEvent * evt) {
 	      }
 	      
 	    } else {
-	      cout << "warning, found " << simhits.size() << " simcalohits for a caloriemter hit" << endl;
+	      streamlog_out ( WARNING ) << "warning, found " << simhits.size() << " simcalohits for a caloriemter hit" << endl;
 	    }
 
 	  }
@@ -468,7 +469,7 @@ void ECALGarlicTrainer::processEvent(LCEvent * evt) {
 	  _ecalP2Frac=nexten/toten;
 
 	} else {
-	  cout << "WARNING could not get the corresponding cluster!" << endl;
+	  streamlog_out ( WARNING ) << "WARNING could not get the corresponding cluster!" << endl;
 	}
 
 	_tree->Fill();
@@ -602,7 +603,7 @@ std::pair <MCParticle*, MCParticle*> ECALGarlicTrainer::findGeneratedAndECALEnte
   MCParticle* mctemp=mcp;
   while ( mctemp->getParents().size()>0 && mctemp->isCreatedInSimulation()) {
     if (mctemp->getParents().size()>1) 
-      cout << "warning " << mctemp->getParents().size() << " parents, considering only first one" << endl;
+      streamlog_out ( WARNING ) << mctemp->getParents().size() << " parents, considering only first one" << endl;
     mctemp = mctemp->getParents()[0];
     generations.push_back(mctemp);
   }
