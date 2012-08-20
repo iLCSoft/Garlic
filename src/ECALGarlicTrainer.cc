@@ -18,7 +18,7 @@ ECALGarlicTrainer anECALGarlicTrainer;
 
 ECALGarlicTrainer::ECALGarlicTrainer() : Processor("ECALGarlicTrainer") {
 
-  streamlog_out ( DEBUG1 ) << "hello from ECALGarlicTrainer constructor " << this << std::endl;
+//  streamlog_out ( DEBUG1 ) << "hello from ECALGarlicTrainer constructor " << this << std::endl;
 
 
   // input pre-clusters
@@ -55,7 +55,7 @@ ECALGarlicTrainer::ECALGarlicTrainer() : Processor("ECALGarlicTrainer") {
 
 
 ECALGarlicTrainer::~ECALGarlicTrainer() {
-  streamlog_out ( DEBUG1 ) << "hello from ECALGarlicTrainer destructor " << this << std::endl;
+//  streamlog_out ( DEBUG1 ) << "hello from ECALGarlicTrainer destructor " << this << std::endl;
 }
 
 void ECALGarlicTrainer::init()

@@ -139,7 +139,7 @@ ECALGarlic anECALGarlic;
 
 ECALGarlic::ECALGarlic() : Processor("ECALGarlic") {
 
-  streamlog_out ( DEBUG1 ) << "hello from ECALGarlic constructor " << this << std::endl;
+//  streamlog_out ( DEBUG1 ) << "hello from ECALGarlic constructor " << this << std::endl;
 
   // processor description
   _description = "Clustering and photon recognition";
@@ -378,7 +378,7 @@ ECALGarlic::ECALGarlic() : Processor("ECALGarlic") {
 
 
 ECALGarlic::~ECALGarlic() {
-  streamlog_out ( DEBUG1 ) << "hello from ECALGarlic destructor " << this << std::endl;
+//  streamlog_out ( DEBUG1 ) << "hello from ECALGarlic destructor " << this << std::endl;
 
   if (_clusterer) {delete _clusterer; _clusterer=NULL;}
   if (_fhistos) {delete _fhistos; _fhistos=NULL;}
