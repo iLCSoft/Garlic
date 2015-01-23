@@ -1,10 +1,20 @@
-GARLIC is a Marlin Processor to identify photon clusters in the ECAL.
-
+GARLIC is a Marlin Processor to identify photons and electrons
+--------------------------------------------------------------
 to build:
 
-cd GARLIC_v2-0
+cd GARLIC_v3-0-0
 mkdir build
 cd build
 cmake -C /some_path/ILCSoft.cmake ..
 make
 make install
+
+example sttering file is given in 
+example_garlic_steer.xml
+
+Suggested cluster properties file given in data/garlicCuts_v1.txt
+This data is obtained from the 30-layer silicon ecal in model ILD_o1_v06
+
+Any problems?
+
+contact Daniel Jeans: jeans AT icepp . s . u-tokyo . ac . jp

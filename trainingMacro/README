@@ -1,0 +1,19 @@
+GARLIC "training"
+------------------
+
+This is the procedure to decide on "reasonable" ranges of various cluster properties, in order for them to be 
+selected as electro-magnetic.
+
+- run the GarlicClusterPropertiesProcessor over samples of mono-energetic single electrons and photons, distributed in 
+theta and phi: for example energies 0.5, 1, 2, 5, 10, 20, 50, 100, 200 GeV. You can use more energy points if you wish.
+A few thousand events at each point should be OK.
+Run the processor over each energy/particle combination individually: this will give a root file for each combination,
+which contains histograms of various cluster properties.
+template.xml is an example of a Marlin steering file for this part.
+
+- the decideCuts.C macro reads these root files, finds the 1, 5, 95, 99% points for each cluster observable 
+for each cluster energy, and then parameterizes these as polynomial functions of log10(cluster energy).
+It writes an output text file garlicCuts.txt which can be used as input to the main GarlicProcessor.
+This file can be edited by hand to remove unwanted cuts (e.g. lower cut on the pointing angle, upper cut
+on the fraction of layers containing hits, which don't really make sense).
+It also produces a .ps file which show the parameterisations in graphical form.

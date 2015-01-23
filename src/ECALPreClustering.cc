@@ -28,7 +28,7 @@
 
 #include <ECALPreClustering.hh>
 
-#include <ECALGarlicExtendedHit.hh>
+#include <GarlicExtendedHit.hh>
 
 using namespace marlin;
 using namespace lcio;
@@ -167,6 +167,8 @@ void ECALPreClustering::PrepareHits(const LCEvent *evt, vector<ExtendedHit* > &h
 
         if (_decodeString=="")
 	  _decodeString=hitColl->getParameters().getStringVal("CellIDEncoding");
+
+	// CellIDDecoder<CalorimeterHit>* dec = new CellIDDecoder<CalorimeterHit> (hitColl);
 
 	int NHits = hitColl->getNumberOfElements();
 	streamlog_out(DEBUG) << colname << " hit Collection has " << NHits << " hits" << endl;
