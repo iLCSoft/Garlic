@@ -1,0 +1,179 @@
+
+<!--##########################################
+    #                                        #
+    #     Example steering file for marlin   #
+    #                                        #
+    ##########################################-->
+<marlin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://ilcsoft.desy.de/marlin/marlin.xsd">
+ <execute>
+
+
+   <processor name="MyLCIOOutputProcessor"/>  
+
+ </execute>
+
+ <global>
+  <parameter name="LCIOInputFiles"> simjob.slcio </parameter>
+  <!-- limit the number of processed records (run+evt): -->  
+  <parameter name="MaxRecordNumber" value="5001" />  
+  <parameter name="SkipNEvents" value="0" />  
+  <parameter name="SupressCheck" value="false" />  
+  <parameter name="GearXMLFile"> gear_ldc.xml </parameter>  
+  <parameter name="Verbosity" options="DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT"> DEBUG  </parameter> 
+  <parameter name="RandomSeed" value="1234567890" />
+  <!-- optionally limit the collections that are read from the input file: -->  
+  <!--parameter name="LCIOReadCollectionNames">MCParticle PandoraPFOs</parameter-->
+ </global>
+
+
+ <processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+ <!--Writes the current event to the specified LCIO outputfile. Needs to be the last ActiveProcessor.-->
+  <!--drops the named collections from the event-->
+  <!--parameter name="DropCollectionNames" type="StringVec">TPCHits HCalHits  </parameter-->
+  <!--drops all collections of the given type from the event-->
+  <!--parameter name="DropCollectionTypes" type="StringVec">SimTrackerHit SimCalorimeterHit  </parameter-->
+  <!-- write complete objects in subset collections to the file (i.e. ignore subset flag)-->
+  <!--parameter name="FullSubsetCollections" type="StringVec">MCParticlesSkimmed  </parameter-->
+  <!--force keep of the named collections - overrules DropCollectionTypes (and DropCollectionNames)-->
+  <!--parameter name="KeepCollectionNames" type="StringVec">MyPreciousSimTrackerHits  </parameter-->
+  <!-- name of output file -->
+  <parameter name="LCIOOutputFile" type="string">outputfile.slcio </parameter>
+  <!--write mode for output file:  WRITE_APPEND or WRITE_NEW-->
+  <parameter name="LCIOWriteMode" type="string">None </parameter>
+  <!--will split output file if size in kB exceeds given value - doesn't work with APPEND and NEW-->
+  <!--parameter name="SplitFileSizekB" type="int">1992294 </parameter-->
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+
+ <processor name="MyECALPreClustering" type="ECALPreClustering">
+ <!--Preclusters ECAL hits to define ROIs for Garlic-->
+  <!--Debugging level 0-3-->
+  <parameter name="Debug" type="int">0 </parameter>
+  <!--Maximum distance of two hits grouped to the same PreCluster-->
+  <parameter name="DistanceCut" type="float">40 </parameter>
+  <!--names of ECAL hit collections-->
+  <parameter name="EcalHitCollections" type="StringVec">ECALEndcap ECALBarrel ECALOther  </parameter>
+  <!--Collecion name of the ECAL preClusrters-->
+  <parameter name="EcalPreClusterCollection" type="string">ECAL_PreClusters </parameter>
+  <!--Minimum number of hits to accept a PreCluster-->
+  <parameter name="MinimumHits" type="int">5 </parameter>
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+</processor>
+
+
+
+
+ <processor name="MyGarlicProcessor" type="GarlicProcessor">
+ <!--Clustering and photon recognition-->
+
+  <!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  <!--parameter name="Verbosity" type="string">DEBUG </parameter-->
+
+  <!--Talk a lot? (0-3)-->
+  <parameter name="DebugMode" type="int">0 </parameter>
+
+<!-- input collections -->
+
+  <!--Name of PreCluster collection-->
+  <parameter name="EcalPreClusterCollection" type="string" lcioInType="Cluster">ECAL_PreClusters </parameter>
+  <!--Name of the MCParticle input collection-->
+  <parameter name="MCParticleCollection" type="string" lcioInType="MCParticle">MCParticle </parameter>
+  <!--TPC track collection name-->
+  <parameter name="TPCTrackCollection" type="string" lcioInType="Track">ClupatraTracks </parameter>
+  <!--track collection name-->
+  <parameter name="TrackCollection" type="string" lcioInType="Track">MarlinTrkTracks </parameter>
+  <!--name of sim->calo hit relation collection-->
+  <parameter name="simHitCaloHitRelations" type="string" lcioInType="LCRelation">RelationCaloHit </parameter>
+
+<!-- output collections -->
+
+  <!--write out debug info collections to lcio file?-->
+  <parameter name="GarlicDebugCollections" type="bool">false </parameter>
+
+  <!--Name of garlic cluster collection-->
+  <parameter name="ClusterCollName" type="string" lcioOutType="Cluster">GARLICPhotonClusters </parameter>
+  <!--Name of cluster to parameter relations-->
+  <parameter name="ClusterParLinksCollName" type="string" lcioOutType="LCRelation">GARLICClusterParameterLinks </parameter>
+  <!--Name of garlic cluster parameters collection-->
+  <parameter name="ClusterParametersCollName" type="string" lcioOutType="LCGenericObject">GARLICClusterParameters </parameter>
+  <!--Name of garlic core collection-->
+  <parameter name="CoreCollName" type="string" lcioOutType="Cluster">GARLICCores </parameter>
+  <!--Name of electron cluster collection-->
+  <parameter name="ElectronClusterCollName" type="string" lcioOutType="Cluster">GARLICElectronClusters </parameter>
+  <!--collection of identified conversions-->
+  <parameter name="GarlicConversionsPFOColName" type="string" lcioOutType="ReconstructedParticle">GARLICConversionPFOs </parameter>
+  <!--collection of identified electrons-->
+  <parameter name="GarlicElectronsPFOColName" type="string" lcioOutType="ReconstructedParticle">GARLICElectronPFOs </parameter>
+  <!--collection of photon PFOs-->
+  <parameter name="GarlicPhotonsPFOColName" type="string" lcioOutType="ReconstructedParticle">GARLICPhotonPFOs </parameter>
+  <!--collection name of removed hits (near tracks)-->
+  <parameter name="RemovedHitsCollection" type="string" lcioOutType="CalorimeterHit">GARLICRemovedHits </parameter>
+  <!--Name of seed to cluster relations-->
+  <parameter name="SeedClusterLinksCollName" type="string" lcioOutType="LCRelation">GARLICSeedClusterLinks </parameter>
+  <!--Name of garlic seed collection-->
+  <parameter name="SeedCollName" type="string" lcioOutType="CalorimeterHit">GARLICSeeds </parameter>
+  <!--Name of seed to core relations-->
+  <parameter name="SeedCoreLinksCollName" type="string" lcioOutType="LCRelation">GARLICSeedCoreLinks </parameter>
+  <!--Name of track extrapolation collection-->
+  <parameter name="TrackExtrapolationCollName" type="string" lcioOutType="CalorimeterHit">GARLICTrackExtrapolations </parameter>
+
+  <!--name of file in which to save clustering histograms-->
+  <parameter name="clusterCheckHistoFile" type="string"> </parameter>
+
+<!-- parameters -->
+
+  <!--factor to convert between ECAL hit energy and MIP scale, for first layer-->
+  <parameter name="EcalEnergyMipConversion" type="float">140 </parameter>
+  <!--Tracks with polar angle below this have less stringent cuts for electron finding (rad)-->
+  <parameter name="ForwardTrackAngle" type="float">0.15 </parameter>
+
+  <!--assumed constant term of energy resolution-->
+  <parameter name="constantTerm" type="float">0.01 </parameter>
+  <!--assumed stochastic term of energy resolution-->
+  <parameter name="stochasticTerm" type="float">0.17 </parameter>
+  <!--assumed Moliere radius of ECAL (mm)-->
+  <parameter name="MoliereRadius" type="float">20 </parameter>
+
+  <!--file containing the photon selection cuts-->
+  <parameter name="PhotonCutFile" type="string"> </parameter>
+
+  <!--take MC info for tracks?-->
+  <parameter name="TrackCheat" type="bool">false </parameter>
+
+  <!--Should remove Hits near extrapolated tracks to reject pions?-->
+  <parameter name="TrackRemoveNearbyHits" type="bool">true </parameter>
+  <!--window around track in which to remove hits (mm)-->
+  <parameter name="TrackVetoWindow" type="float">10 </parameter>
+
+  <!--radius of seed cylinder (in terms of cell size)-->
+  <parameter name="SeedMaxDistance" type="float">1.5 </parameter>
+  <!--reject seeds below this energy (in MIPs)-->
+  <parameter name="SeedMinEnergy" type="float">5 </parameter>
+  <!--consider only hits above this threshold (in MIPs) in the seeding-->
+  <parameter name="SeedMinHitEnergy" type="float">2.5 </parameter>
+  <!--Minimum number of hits to accept a seed.-->
+  <parameter name="SeedMinHits" type="int">2 </parameter>
+  <!--Number of ECAL pseudo layers used for projecting to obtain a seed, typically equivalent to 5 X0.-->
+  <parameter name="SeedNLayers" type="int">12 </parameter>
+
+  <!--max transverse distance for adding hits to core (in terms of cell size)-->
+  <parameter name="CoreMaxDistance" type="float">1.5 </parameter>
+  <!--max hole in core building for section 1-->
+  <parameter name="CoreMaxHoleSection1" type="int">3 </parameter>
+  <!--max hole in core building for section 2-->
+  <parameter name="CoreMaxHoleSection2" type="int">2 </parameter>
+  <!--first calo section definition for core building-->
+  <parameter name="CoreNlayersSection1" type="int">16 </parameter>
+
+  <!--Maximum distance from core to added hits (in Moliere Radii)-->
+  <parameter name="ClusterMaxDist" type="float">2 </parameter>
+  <!--maximum distance between 2 cluster COGs to consider merging them (int terms of Moliere Radii)-->
+  <parameter name="MaxMergeDist" type="float">2 </parameter>
+
+</processor>
+
+
+</marlin>
