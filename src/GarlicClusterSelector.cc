@@ -15,6 +15,12 @@ void GarlicClusterSelector::readInCutValues(std::string cutFileName) {
   std::string line;
   std::ifstream infile (cutFileName.c_str());
 
+  // check the input file exists
+  if ( !infile ) {
+    cout << "GarlicClusterSelector::readInCutValues ERROR: requested cluster cut file " << cutFileName << " does not seem to exist!" << endl;
+    assert (0);
+  }
+
   int pdg;
   std::string varClass;
   std::string vname;
