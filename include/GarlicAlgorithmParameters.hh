@@ -58,14 +58,12 @@ public:
 
   void SetMergeRatioCut              (float x ) { _merge_ratioCut                 = x; };
   void SetMergeEnergyDistFactor	     (float x ) { _merge_energy_dist_factor       = x; };
-  void SetMergeDistanceMultiplier    (float x ) { _merge_distanceMultiplier       = x; };
   void SetMergeAbsoluteLargestDist   (float x ) { _merge_absoluteLargestDist      = x; };
   void SetMergePi0MassLimit	     (float x ) { _merge_pi0_mass_limit           = x; };
   void SetMergePi0MaxEnergyImbalance (float x ) { _merge_pi0_max_energy_imbalance = x; };
   
   float GetMergeRatioCut              () { return _merge_ratioCut                ; };
   float GetMergeEnergyDistFactor      () { return _merge_energy_dist_factor      ; };
-  float GetMergeDistanceMultiplier    () { return _merge_distanceMultiplier      ; };
   float GetMergeAbsoluteLargestDist   () { return _merge_absoluteLargestDist     ; };
   float GetMergePi0MassLimit	      () { return _merge_pi0_mass_limit          ; };
   float GetMergePi0MaxEnergyImbalance () { return _merge_pi0_max_energy_imbalance; };
@@ -162,7 +160,6 @@ private:
 
   float _merge_ratioCut;
   float _merge_energy_dist_factor;
-  float _merge_distanceMultiplier;
   float _merge_absoluteLargestDist;
   float _merge_pi0_mass_limit;
   float _merge_pi0_max_energy_imbalance;

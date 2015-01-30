@@ -394,11 +394,6 @@ GarlicProcessor::GarlicProcessor() : Processor("GarlicProcessor") {
 			     _x_MergeEnergyDistFactor,
 			     float(120.) );
 
-  registerProcessorParameter("MergeDistanceMultiplier",
-			     "don't consider merging two clusters if transverse cl-cl dist > MergeDistanceMultiplier*MaxMergeDist*MoliereRadius",
-			     _x_MergeDistanceMultiplier,
-			     float(1.) );
-
   registerProcessorParameter("MergeAbsoluteLargestDist",
 			     "don't consider merging two clusters if distance between cluster centres > MergeAbsoluteLargestDist",
 			     _x_MergeAbsoluteLargestDist,
@@ -507,16 +502,8 @@ void GarlicProcessor::setup()
   GarlicAlgorithmParameters::Instance().SetForwardTrackAngle(_x_forwardTrackAngle);
 
 
- //  const float ratioCut = 0.25;
-  //  const float energy_dist_factor = 120;
-  //  const float distanceMultiplier = 1.;
-  //  const float absoluteLargestDist = 500.;
- //  const float mass_limit = 0.1; // a little smaller than pi0 mass
-  //  const float max_mass_imbalance_for_pi0=50; // reduced from 100....
-
   GarlicAlgorithmParameters::Instance().SetMergeRatioCut              (_x_MergeRatioCut             );
   GarlicAlgorithmParameters::Instance().SetMergeEnergyDistFactor      (_x_MergeEnergyDistFactor     );
-  GarlicAlgorithmParameters::Instance().SetMergeDistanceMultiplier    (_x_MergeDistanceMultiplier   );
   GarlicAlgorithmParameters::Instance().SetMergeAbsoluteLargestDist   (_x_MergeAbsoluteLargestDist  );
   GarlicAlgorithmParameters::Instance().SetMergePi0MassLimit          (_x_MergePi0MassLimit         );
   GarlicAlgorithmParameters::Instance().SetMergePi0MaxEnergyImbalance (_x_MergePi0MaxEnergyImbalance);

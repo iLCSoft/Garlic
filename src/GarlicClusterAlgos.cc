@@ -924,7 +924,6 @@ bool GarlicClusterAlgos::mergeCandidate( GarlicExtendedCluster* primary, GarlicE
 
   float ratioCut                   = GarlicAlgorithmParameters::Instance().GetMergeRatioCut              ();
   float energy_dist_factor         = GarlicAlgorithmParameters::Instance().GetMergeEnergyDistFactor      ();
-  float distanceMultiplier         = GarlicAlgorithmParameters::Instance().GetMergeDistanceMultiplier    ();
   float absoluteLargestDist        = GarlicAlgorithmParameters::Instance().GetMergeAbsoluteLargestDist   ();
   float mass_limit                 = GarlicAlgorithmParameters::Instance().GetMergePi0MassLimit          ();
   float max_mass_imbalance_for_pi0 = GarlicAlgorithmParameters::Instance().GetMergePi0MaxEnergyImbalance ();
@@ -950,7 +949,16 @@ bool GarlicClusterAlgos::mergeCandidate( GarlicExtendedCluster* primary, GarlicE
 
   bool ok_enRatio = energyRatio<ratioCut;                               // don't merge similar-energy clusters
   bool ok_enRatioDist = energyRatio<energy_dist_factor/pow(cogDist,2);  // energy fraction-dependent distance cut
-  bool ok_Dist = cogDist<distanceMultiplier*GarlicAlgorithmParameters::Instance().Get_MaxMergeDist()*GarlicAlgorithmParameters::Instance().GetMoliereRadius(); // distance
+  bool ok_Dist = cogDist<GarlicAlgorithmParameters::Instance().Get_MaxMergeDist()*GarlicAlgorithmParameters::Instance().GetMoliereRadius(); // distance
+
+  if ( _verbose ) {
+    if ( !ok_Dist ) {
+      cout << "failed Dist cut " << cogDist << " " << 
+	GarlicAlgorithmParameters::Instance().Get_MaxMergeDist()*
+	GarlicAlgorithmParameters::Instance().GetMoliereRadius() 
+	   << endl;
+    }
+  }
 
   // this is to avoid merging pi0s, based on inv mass
   bool ok_Pi0(true);
