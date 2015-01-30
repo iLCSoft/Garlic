@@ -140,6 +140,7 @@ private:
   float _x_maxMergeDist;
 
   //  int    _x_nIterations;
+  float _x_TouchingCellDistance;
   float  _x_clusterMaxDist;
 
   float _x_trackWindowVeto;
@@ -151,6 +152,18 @@ private:
   float _x_energy_mip_conversion;
 
   bool _x_debugCollections;
+
+
+  float _x_MergeRatioCut             ;
+  float _x_MergeEnergyDistFactor     ;
+  float _x_MergeDistanceMultiplier   ;
+  float _x_MergeAbsoluteLargestDist  ;
+  float _x_MergePi0MassLimit         ;
+  float _x_MergePi0MaxEnergyImbalance;
+
+  float _x_ElectronTransTubeStepSize;
+  int _x_ElectronTransNSteps;
+
 
   std::string _x_photonSelFile;
 

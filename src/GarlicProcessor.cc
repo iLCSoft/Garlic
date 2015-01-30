@@ -337,7 +337,24 @@ GarlicProcessor::GarlicProcessor() : Processor("GarlicProcessor") {
                              float (1.5) );
 
 
+  // electron specific
+  registerProcessorParameter("ElectronTransTubeStepSize",
+			     "fraction of moliere radius with which to increment electron hit tube at each iteration",
+			     _x_ElectronTransTubeStepSize,
+			     float (0.75) );
+
+  registerProcessorParameter("ElectronTransTubeNSteps",
+			     "number of iterations for electron tube making",
+			     _x_ElectronTransNSteps,
+			     int (3) );
+
+
   // clustering
+  registerProcessorParameter("TouchingCellDistance",
+			     "definition of distance between cells to be considered touching (multiplier of cell size)",
+			     _x_TouchingCellDistance,
+			     float ( 2.4 ) );
+
   registerProcessorParameter("ClusterMaxDist",
                              "Maximum distance from core to added hits (in Moliere Radii)",
                              _x_clusterMaxDist,
@@ -366,6 +383,36 @@ GarlicProcessor::GarlicProcessor() : Processor("GarlicProcessor") {
                              "assumed Moliere radius of ECAL (mm)",
                              _x_moliereRadius,
                              float( 20. ) );
+
+  registerProcessorParameter("MergeRatioCut",
+			     "don't consider merging two clusters if E_min/E_max > MergeRatioCut",
+			     _x_MergeRatioCut,
+			     float ( 0.25 ) );
+
+  registerProcessorParameter("MergeEnergyDistFactor",
+			     "don't consider merging two clusters if E_min/E_max > MergeEnergyDistFactor/(cl-cl dist **2) [cl-cl dist = transverse dist between clusters in mm]",
+			     _x_MergeEnergyDistFactor,
+			     float(120.) );
+
+  registerProcessorParameter("MergeDistanceMultiplier",
+			     "don't consider merging two clusters if transverse cl-cl dist > MergeDistanceMultiplier*MaxMergeDist*MoliereRadius",
+			     _x_MergeDistanceMultiplier,
+			     float(1.) );
+
+  registerProcessorParameter("MergeAbsoluteLargestDist",
+			     "don't consider merging two clusters if distance between cluster centres > MergeAbsoluteLargestDist",
+			     _x_MergeAbsoluteLargestDist,
+			     float (500.) );
+
+  registerProcessorParameter("MergePi0MassLimit",
+			     "to veto merging 2 clusters, ask for their invariant mass to be consistent with a value > MergePi0MassLimit @ 2 sigma, and that E_max/E_min < MergePi0MaxEnergyImbalance",
+			     _x_MergePi0MassLimit,
+			     float(0.1) );
+
+  registerProcessorParameter("MergePi0MaxEnergyImbalance",
+			     "to veto merging 2 clusters, ask for their invariant mass to be consistent with a value > MergePi0MassLimit @ 2 sigma, and that E_max/E_min < MergePi0MaxEnergyImbalance",
+			     _x_MergePi0MaxEnergyImbalance,
+			     float(50.) );
 
 
   // photon ID
@@ -447,6 +494,8 @@ void GarlicProcessor::setup()
   GarlicAlgorithmParameters::Instance().SetCoreMaxHoleSection2(_x_maxHoleSection2);
   GarlicAlgorithmParameters::Instance().SetCoreDistanceCut(_x_maxCoreDist);
 
+  GarlicAlgorithmParameters::Instance().SetTouchingCellDistance(_x_TouchingCellDistance);
+
   GarlicAlgorithmParameters::Instance().SetStochasticTerm ( _x_stochasticTerm );
   GarlicAlgorithmParameters::Instance().SetConstantTerm   ( _x_constantTerm   );
   GarlicAlgorithmParameters::Instance().SetMoliereRadius  ( _x_moliereRadius  );
@@ -456,6 +505,26 @@ void GarlicProcessor::setup()
   GarlicAlgorithmParameters::Instance().SetPhotonCutFile(_x_photonSelFile);
 
   GarlicAlgorithmParameters::Instance().SetForwardTrackAngle(_x_forwardTrackAngle);
+
+
+ //  const float ratioCut = 0.25;
+  //  const float energy_dist_factor = 120;
+  //  const float distanceMultiplier = 1.;
+  //  const float absoluteLargestDist = 500.;
+ //  const float mass_limit = 0.1; // a little smaller than pi0 mass
+  //  const float max_mass_imbalance_for_pi0=50; // reduced from 100....
+
+  GarlicAlgorithmParameters::Instance().SetMergeRatioCut              (_x_MergeRatioCut             );
+  GarlicAlgorithmParameters::Instance().SetMergeEnergyDistFactor      (_x_MergeEnergyDistFactor     );
+  GarlicAlgorithmParameters::Instance().SetMergeDistanceMultiplier    (_x_MergeDistanceMultiplier   );
+  GarlicAlgorithmParameters::Instance().SetMergeAbsoluteLargestDist   (_x_MergeAbsoluteLargestDist  );
+  GarlicAlgorithmParameters::Instance().SetMergePi0MassLimit          (_x_MergePi0MassLimit         );
+  GarlicAlgorithmParameters::Instance().SetMergePi0MaxEnergyImbalance (_x_MergePi0MaxEnergyImbalance);
+
+
+  GarlicAlgorithmParameters::Instance().SetElectronTransTubeStepSize ( _x_ElectronTransTubeStepSize );
+  GarlicAlgorithmParameters::Instance().SetElectronTransNSteps ( _x_ElectronTransNSteps );
+
 
   _clusterer = new GarlicClusterAlgos();
 

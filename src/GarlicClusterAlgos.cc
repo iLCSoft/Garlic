@@ -235,7 +235,8 @@ vector < std::pair < GarlicExtendedTrack*, GarlicExtendedCluster* > > GarlicClus
   vector < std::pair < GarlicExtendedTrack*, GarlicExtendedCluster* > > electrons;
 
   // try a narrow tube
-  float maxAddDist = 0.75*GarlicAlgorithmParameters::Instance().GetMoliereRadius();
+  //  float maxAddDist = 0.75*GarlicAlgorithmParameters::Instance().GetMoliereRadius();
+  float maxAddDist = GarlicAlgorithmParameters::Instance().GetElectronTransTubeStepSize()*GarlicAlgorithmParameters::Instance().GetMoliereRadius();
 
   for ( size_t it=0; it<trks.size(); it++ ) {
 
@@ -293,10 +294,16 @@ vector < std::pair < GarlicExtendedTrack*, GarlicExtendedCluster* > > GarlicClus
     for (int i=0; i<3; i++)
       point2[i]=electronCore->getCentreOfGravity()[i]-direction[i];
 
+    int nsteps=GarlicAlgorithmParameters::Instance().GetElectronTransNSteps();
+    //    const int nsteps=3;
 
-    const int nsteps=3;
+    std::vector < std::vector < GarlicExtendedHit* >  > possibleHits;
+    for (int i=0; i<nsteps; i++) {
+      std::vector < GarlicExtendedHit* > aa;
+      possibleHits.push_back(aa);
+    }
 
-    std::vector < GarlicExtendedHit* > possibleHits[nsteps];
+    // std::vector < GarlicExtendedHit* > possibleHits[nsteps];
     for ( size_t ij=0; ij<preCluster->getHits()->size(); ij++) {
       GarlicExtendedHit* hh = preCluster->getHits()->at(ij);
       if ( find(electronCore->getHits()->begin(), electronCore->getHits()->end(), hh)==electronCore->getHits()->end() ) {
@@ -425,8 +432,10 @@ std::map < CalorimeterHit*, GarlicExtendedCluster* > GarlicClusterAlgos::getClus
   // assign unassigned hits to "best" core
 
   //  float addCut = 1.9*GarlicGeometryParameters::Instance().Get_padSizeEcal()[1]; // include diagonal but not 2 cells away
-  float addCut = 2.4*GarlicGeometryParameters::Instance().Get_padSizeEcal()[1]; // include diagonal but not 2 cells away
+  //  float addCut = 2.4*GarlicGeometryParameters::Instance().Get_padSizeEcal()[1]; // include diagonal but not 2 cells away
+  float addCut = GarlicAlgorithmParameters::Instance().GetTouchingCellDistance()*GarlicGeometryParameters::Instance().Get_padSizeEcal()[1]; // include diagonal but not 2 cells away
   //  int nIterations = GarlicAlgorithmParameters::Instance().GetClusterNIterations();
+
   float maxDistCut = GarlicAlgorithmParameters::Instance().GetClusterMaxDist()*GarlicAlgorithmParameters::Instance().GetMoliereRadius();
 
   // duplicate the cores into the clusters
@@ -904,15 +913,22 @@ bool GarlicClusterAlgos::mergeCandidate( GarlicExtendedCluster* primary, GarlicE
     }
   }
 
-  // should make these parameters!
-  const float ratioCut = 0.25;
-  const float energy_dist_factor = 120;
-  const float distanceMultiplier = 1.;
-  const float absoluteLargestDist = 500.;
+//  // should make these parameters!
+//  const float ratioCut = 0.25;
+//  const float energy_dist_factor = 120;
+//  const float distanceMultiplier = 1.;
+//  const float absoluteLargestDist = 500.;
+//  // for pi0
+//  const float mass_limit = 0.1; // a little smaller than pi0 mass
+//  const float max_mass_imbalance_for_pi0=50; // reduced from 100....
 
-  // for pi0
-  const float mass_limit = 0.1; // a little smaller than pi0 mass
-  const float max_mass_imbalance_for_pi0=100;
+  float ratioCut                   = GarlicAlgorithmParameters::Instance().GetMergeRatioCut              ();
+  float energy_dist_factor         = GarlicAlgorithmParameters::Instance().GetMergeEnergyDistFactor      ();
+  float distanceMultiplier         = GarlicAlgorithmParameters::Instance().GetMergeDistanceMultiplier    ();
+  float absoluteLargestDist        = GarlicAlgorithmParameters::Instance().GetMergeAbsoluteLargestDist   ();
+  float mass_limit                 = GarlicAlgorithmParameters::Instance().GetMergePi0MassLimit          ();
+  float max_mass_imbalance_for_pi0 = GarlicAlgorithmParameters::Instance().GetMergePi0MaxEnergyImbalance ();
+
 
   // first a cut on the simple distance between centres of gravity
   float simpleCCdist(0);
@@ -920,6 +936,8 @@ bool GarlicClusterAlgos::mergeCandidate( GarlicExtendedCluster* primary, GarlicE
     simpleCCdist+=pow(primary->getCentreOfGravity()[i] - secondary->getCentreOfGravity()[i],2);
   simpleCCdist=sqrt(simpleCCdist);
   if ( simpleCCdist>absoluteLargestDist ) return false;
+
+  
 
   // then the distance from cluster axis (energy-dependent cut)
   float cogDist =  primary->getDistToClusterAxis(  secondary->getCentreOfGravity(), 0 ); // ip pointing
@@ -934,7 +952,7 @@ bool GarlicClusterAlgos::mergeCandidate( GarlicExtendedCluster* primary, GarlicE
   bool ok_enRatioDist = energyRatio<energy_dist_factor/pow(cogDist,2);  // energy fraction-dependent distance cut
   bool ok_Dist = cogDist<distanceMultiplier*GarlicAlgorithmParameters::Instance().Get_MaxMergeDist()*GarlicAlgorithmParameters::Instance().GetMoliereRadius(); // distance
 
-  // this is to avoid merging pi0s, mased on inv mass
+  // this is to avoid merging pi0s, based on inv mass
   bool ok_Pi0(true);
   if ( ! primary->getAssociatedTrack() && ! secondary->getAssociatedTrack() ) {
     std::pair < float, float > comboMassErr = primary->getCombinedInvariantMass(secondary);

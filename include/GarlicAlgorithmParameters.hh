@@ -38,6 +38,9 @@ public:
   void SetCoreMaxHoleSection2(int i) {_coreMaxHoleSec2 = i;}
   void SetCoreDistanceCut(float f) {_coreDistanceCut=f;}
 
+  void  SetTouchingCellDistance(float f) {_touchingCellDist=f;}
+  float GetTouchingCellDistance() {return _touchingCellDist;}
+
   void SetClusterMaxDist(float f) {_clusterMaxDist=f;}
 
   void SetForwardTrackAngle(float f) {_forwardTrackAngle=f;}
@@ -53,7 +56,25 @@ public:
   void SetEnergyMIPconversion(float x) {_en_mip_conv=x;}
   float GetEnergyMIPconversion() {return _en_mip_conv;}
 
+  void SetMergeRatioCut              (float x ) { _merge_ratioCut                 = x; };
+  void SetMergeEnergyDistFactor	     (float x ) { _merge_energy_dist_factor       = x; };
+  void SetMergeDistanceMultiplier    (float x ) { _merge_distanceMultiplier       = x; };
+  void SetMergeAbsoluteLargestDist   (float x ) { _merge_absoluteLargestDist      = x; };
+  void SetMergePi0MassLimit	     (float x ) { _merge_pi0_mass_limit           = x; };
+  void SetMergePi0MaxEnergyImbalance (float x ) { _merge_pi0_max_energy_imbalance = x; };
   
+  float GetMergeRatioCut              () { return _merge_ratioCut                ; };
+  float GetMergeEnergyDistFactor      () { return _merge_energy_dist_factor      ; };
+  float GetMergeDistanceMultiplier    () { return _merge_distanceMultiplier      ; };
+  float GetMergeAbsoluteLargestDist   () { return _merge_absoluteLargestDist     ; };
+  float GetMergePi0MassLimit	      () { return _merge_pi0_mass_limit          ; };
+  float GetMergePi0MaxEnergyImbalance () { return _merge_pi0_max_energy_imbalance; };
+  
+  void SetElectronTransTubeStepSize(float x) { _ElectronTransTubeStepSize=x; }
+  float GetElectronTransTubeStepSize() {return _ElectronTransTubeStepSize; }
+
+  void SetElectronTransNSteps (int x) { _ElectronTransNSteps =x; }
+  int GetElectronTransNSteps () { return _ElectronTransNSteps; }
 
 
   std::string  GetEcalPreClusterCollectionName()  {return _ecalPreClusterCollectionName;}
@@ -137,7 +158,17 @@ private:
 
   float _forwardTrackAngle;
 
+  float _touchingCellDist;
 
+  float _merge_ratioCut;
+  float _merge_energy_dist_factor;
+  float _merge_distanceMultiplier;
+  float _merge_absoluteLargestDist;
+  float _merge_pi0_mass_limit;
+  float _merge_pi0_max_energy_imbalance;
+
+  float _ElectronTransTubeStepSize;
+  int   _ElectronTransNSteps;
 
 };
 
