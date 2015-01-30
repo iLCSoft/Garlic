@@ -137,7 +137,7 @@ private:
   int   _x_maxHoleSection2;
   float _x_maxCoreDist;
   
-  float _x_maxMergeDist;
+  //  float _x_maxMergeDist;
 
   //  int    _x_nIterations;
   float _x_TouchingCellDistance;
@@ -153,6 +153,9 @@ private:
 
   bool _x_debugCollections;
 
+
+  float _x_maxMergeDistLowEn;
+  float _x_maxMergeDistEnDep;
 
   float _x_MergeRatioCut             ;
   float _x_MergeEnergyDistFactor     ;

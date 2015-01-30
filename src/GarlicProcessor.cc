@@ -363,10 +363,17 @@ GarlicProcessor::GarlicProcessor() : Processor("GarlicProcessor") {
 
   // cluster merging
 
-  registerProcessorParameter("MaxMergeDist",
-                             "maximum distance between 2 cluster COGs to consider merging them (int terms of Moliere Radii)",
-                             _x_maxMergeDist,
+
+  registerProcessorParameter("MaxMergeDistLowEn",
+                             "maximum distance between clusters to consider merging: max(MaxMergeDistLowEn, MaxMergeDistLowEn + MaxMergeDistEnDep*log10(clusEn))",
+                             _x_maxMergeDistLowEn,
                              float(2.) );
+
+
+  registerProcessorParameter("MaxMergeDistEnDep",
+                             "maximum distance between clusters to consider merging: max(MaxMergeDistLowEn, MaxMergeDistLowEn + MaxMergeDistEnDep*log10(clusEn))",
+                             _x_maxMergeDistEnDep,
+                             float(1.5) );
 
 
   registerProcessorParameter("stochasticTerm",
@@ -482,8 +489,6 @@ void GarlicProcessor::setup()
 
   GarlicAlgorithmParameters::Instance().SetClusterMaxDist(_x_clusterMaxDist);
 
-  GarlicAlgorithmParameters::Instance().Set_MaxMergeDist( _x_maxMergeDist ); // max dist to merge clusters
-
   GarlicAlgorithmParameters::Instance().SetCoreLayersSection1(_x_nlayersSection1);
   GarlicAlgorithmParameters::Instance().SetCoreMaxHoleSection1(_x_maxHoleSection1);
   GarlicAlgorithmParameters::Instance().SetCoreMaxHoleSection2(_x_maxHoleSection2);
@@ -501,6 +506,9 @@ void GarlicProcessor::setup()
 
   GarlicAlgorithmParameters::Instance().SetForwardTrackAngle(_x_forwardTrackAngle);
 
+
+  GarlicAlgorithmParameters::Instance().SetMergeMaxDistAtLowEn( _x_maxMergeDistLowEn );
+  GarlicAlgorithmParameters::Instance().SetMergeMaxDistEnDep( _x_maxMergeDistEnDep );
 
   GarlicAlgorithmParameters::Instance().SetMergeRatioCut              (_x_MergeRatioCut             );
   GarlicAlgorithmParameters::Instance().SetMergeEnergyDistFactor      (_x_MergeEnergyDistFactor     );

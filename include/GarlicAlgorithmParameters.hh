@@ -49,19 +49,23 @@ public:
   void SetConstantTerm   ( float f ) {_constantTerm  =f;}
   void SetMoliereRadius  ( float f ) {_moliereRadius =f;}
 
-  void Set_MaxMergeDist (float x) {_max_merge_dist=x;}
-  float Get_MaxMergeDist () {return _max_merge_dist;}
+  //void Set_MaxMergeDist (float x) {_max_merge_dist=x;}
+  //float Get_MaxMergeDist () {return _max_merge_dist;}
   
   // for converting hit energies to MIPs - for first layer: scale aothers according to abs thickness
   void SetEnergyMIPconversion(float x) {_en_mip_conv=x;}
   float GetEnergyMIPconversion() {return _en_mip_conv;}
 
+  void SetMergeMaxDistAtLowEn(float x) {_MaxMergeDistAtLowEn=x;}
+  void SetMergeMaxDistEnDep(float x) {_MaxMergeDistEnDep=x;}
   void SetMergeRatioCut              (float x ) { _merge_ratioCut                 = x; };
   void SetMergeEnergyDistFactor	     (float x ) { _merge_energy_dist_factor       = x; };
   void SetMergeAbsoluteLargestDist   (float x ) { _merge_absoluteLargestDist      = x; };
   void SetMergePi0MassLimit	     (float x ) { _merge_pi0_mass_limit           = x; };
   void SetMergePi0MaxEnergyImbalance (float x ) { _merge_pi0_max_energy_imbalance = x; };
   
+  float GetMergeMaxDistAtLowEn() {return _MaxMergeDistAtLowEn;}
+  float GetMergeMaxDistEnDep() {return _MaxMergeDistEnDep;}
   float GetMergeRatioCut              () { return _merge_ratioCut                ; };
   float GetMergeEnergyDistFactor      () { return _merge_energy_dist_factor      ; };
   float GetMergeAbsoluteLargestDist   () { return _merge_absoluteLargestDist     ; };
@@ -146,7 +150,9 @@ private:
   float _mergeTouchFraction;
   int _mergeInitialLayerSeparation;
 
-  float _max_merge_dist;
+  //  float _max_merge_dist;
+  float _MaxMergeDistAtLowEn;
+  float _MaxMergeDistEnDep;
 
   float _stochasticTerm;
   float _constantTerm;

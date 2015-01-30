@@ -170,8 +170,6 @@
 
   <!--Maximum distance from core to added hits (in Moliere Radii)-->
   <parameter name="ClusterMaxDist" type="float">2 </parameter>
-  <!--maximum distance between 2 cluster COGs to consider merging them (int terms of Moliere Radii)-->
-  <parameter name="MaxMergeDist" type="float">2 </parameter>
 
 </processor>
 

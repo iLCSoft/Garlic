@@ -913,14 +913,7 @@ bool GarlicClusterAlgos::mergeCandidate( GarlicExtendedCluster* primary, GarlicE
     }
   }
 
-//  // should make these parameters!
-//  const float ratioCut = 0.25;
-//  const float energy_dist_factor = 120;
-//  const float distanceMultiplier = 1.;
-//  const float absoluteLargestDist = 500.;
-//  // for pi0
-//  const float mass_limit = 0.1; // a little smaller than pi0 mass
-//  const float max_mass_imbalance_for_pi0=50; // reduced from 100....
+  float maxClEn = std::max( primary->getEnergy(), secondary->getEnergy() );
 
   float ratioCut                   = GarlicAlgorithmParameters::Instance().GetMergeRatioCut              ();
   float energy_dist_factor         = GarlicAlgorithmParameters::Instance().GetMergeEnergyDistFactor      ();
@@ -928,6 +921,11 @@ bool GarlicClusterAlgos::mergeCandidate( GarlicExtendedCluster* primary, GarlicE
   float mass_limit                 = GarlicAlgorithmParameters::Instance().GetMergePi0MassLimit          ();
   float max_mass_imbalance_for_pi0 = GarlicAlgorithmParameters::Instance().GetMergePi0MaxEnergyImbalance ();
 
+  // energy-dependent max distance between clusters
+  float min_max_merge_dist  = GarlicAlgorithmParameters::Instance().GetMergeMaxDistAtLowEn();
+  float edap_max_merge_dist = GarlicAlgorithmParameters::Instance().GetMergeMaxDistEnDep();
+  float max_merge_dist_rm = std::max ( float(min_max_merge_dist), float(min_max_merge_dist + edap_max_merge_dist*log10( maxClEn ) ));
+  float max_merge_dist_mm = max_merge_dist_rm*GarlicAlgorithmParameters::Instance().GetMoliereRadius();
 
   // first a cut on the simple distance between centres of gravity
   float simpleCCdist(0);
@@ -935,8 +933,6 @@ bool GarlicClusterAlgos::mergeCandidate( GarlicExtendedCluster* primary, GarlicE
     simpleCCdist+=pow(primary->getCentreOfGravity()[i] - secondary->getCentreOfGravity()[i],2);
   simpleCCdist=sqrt(simpleCCdist);
   if ( simpleCCdist>absoluteLargestDist ) return false;
-
-  
 
   // then the distance from cluster axis (energy-dependent cut)
   float cogDist =  primary->getDistToClusterAxis(  secondary->getCentreOfGravity(), 0 ); // ip pointing
@@ -949,14 +945,11 @@ bool GarlicClusterAlgos::mergeCandidate( GarlicExtendedCluster* primary, GarlicE
 
   bool ok_enRatio = energyRatio<ratioCut;                               // don't merge similar-energy clusters
   bool ok_enRatioDist = energyRatio<energy_dist_factor/pow(cogDist,2);  // energy fraction-dependent distance cut
-  bool ok_Dist = cogDist<GarlicAlgorithmParameters::Instance().Get_MaxMergeDist()*GarlicAlgorithmParameters::Instance().GetMoliereRadius(); // distance
+  bool ok_Dist = cogDist<max_merge_dist_mm; // distance
 
   if ( _verbose ) {
     if ( !ok_Dist ) {
-      cout << "failed Dist cut " << cogDist << " " << 
-	GarlicAlgorithmParameters::Instance().Get_MaxMergeDist()*
-	GarlicAlgorithmParameters::Instance().GetMoliereRadius() 
-	   << endl;
+      cout << "failed Dist cut " << cogDist << " > " << max_merge_dist_mm << endl;
     }
   }
 
