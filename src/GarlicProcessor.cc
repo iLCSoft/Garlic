@@ -2006,23 +2006,42 @@ void GarlicProcessor::setUpGeometry() {
 
   // layer positions: this should be approx position of centre of silicon layer
   float positions[MAX_NUMBER_OF_LAYERS]={0};
-  for (int i=0; i<ecalBarrelLayout.getNLayers(); i++) {
-    positions[i] = ecalBarrelLayout.getDistance(i); // + ecalBarrelLayout.getThickness(i)/2; // for mokka fix aug2014
+
+  // if the parameter Ecal_barrel_gear_per_sensitiveLayer is set in the gear file, 
+  //     what we get from ecalBarrelLayout.getDistance() is ~ the centre of the silicon layer
+  // otherwise, it is ~centre of absorber layer
+  int getLayPosBySensitive=0;
+  try {
+    getLayPosBySensitive=pEcalBarrel.getIntVal("Ecal_barrel_gear_per_sensitiveLayer");
   }
-  //  positions[0]=positions[1]-ecalBarrelLayout.getThickness(0);
-  // positions[ecalBarrelLayout.getNLayers()] = positions[ecalBarrelLayout.getNLayers()-1] + ecalBarrelLayout.getThickness(ecalBarrelLayout.getNLayers()-1);
+  catch(gear::UnknownParameterException) {}
+
+  for (int i=0; i<ecalBarrelLayout.getNLayers(); i++) {
+    if ( getLayPosBySensitive==1 ) {
+      positions[i] = ecalBarrelLayout.getDistance(i); // new defn of layer position
+    } else {
+      positions[i] = ecalBarrelLayout.getDistance(i) - ecalBarrelLayout.getThickness(i)/2; // the older one (e.g. v05 models)
+    }
+  }
+  if ( getLayPosBySensitive!=1 ) { // we need some messy trickery for the last sensitive layer...
+    positions[ecalBarrelLayout.getNLayers()] = positions[ecalBarrelLayout.getNLayers()-1] + ecalBarrelLayout.getThickness(ecalBarrelLayout.getNLayers()-1);
+  }
   GarlicGeometryParameters::Instance().Set_positionBarrelLayer(positions);
 
   for (int i=0; i<MAX_NUMBER_OF_LAYERS; i++) positions[i]=0;
   for (int i=0; i<ecalEndcapLayout.getNLayers(); i++) {
-    //    positions[i] = ecalEndcapLayout.getDistance(i) + ecalEndcapLayout.getThickness(i)/2;
-    positions[i] = ecalEndcapLayout.getDistance(i); // + ecalEndcapLayout.getThickness(i)/2; for mokka fix aug2014
+    if ( getLayPosBySensitive==1 ) {
+      positions[i] = ecalEndcapLayout.getDistance(i); // + ecalEndcapLayout.getThickness(i)/2; for mokka fix aug2014
+    } else {
+      positions[i] = ecalEndcapLayout.getDistance(i) + ecalEndcapLayout.getThickness(i)/2;
+    }
   }
-  //  positions[ecalEndcapLayout.getNLayers()] = positions[ecalEndcapLayout.getNLayers()-1] + ecalEndcapLayout.getThickness(ecalEndcapLayout.getNLayers()-1);
-
+  if ( getLayPosBySensitive!=1 ) { // we need some messy trickery for the last sensitive layer...
+    positions[ecalEndcapLayout.getNLayers()] = positions[ecalEndcapLayout.getNLayers()-1] + ecalEndcapLayout.getThickness(ecalEndcapLayout.getNLayers()-1);
+  }
   GarlicGeometryParameters::Instance().Set_positionEndcapLayer(positions);
 
-  float rad_length=3.5; // mm
+  float rad_length=3.5; // mm, for tungsten. if you want to test a different radiator, you'll need to expand this part
   if ( find( pEcalBarrel.getStringKeys().begin(), pEcalBarrel.getStringKeys().end(), "Ecal_radiator_material" )!=pEcalBarrel.getStringKeys().end() ) {
     if ( pEcalBarrel.getStringVal ( "Ecal_radiator_material" )!="tungsten" )
       streamlog_out( WARNING ) << "do not know radiation length of " << pEcalBarrel.getStringVal ( "Ecal_radiator_material" ) << " , assuming " << rad_length << " mm " << endl;
