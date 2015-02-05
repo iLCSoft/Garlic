@@ -1592,12 +1592,18 @@ void GarlicProcessor::PrepareTracks(const LCEvent *evt, vector<GarlicExtendedTra
     LCCollection* trackColl = evt->getCollection(_TrackCollectionName);
     streamlog_out ( DEBUG2 )  << trackColl->getNumberOfElements() << " tracks in " << _TrackCollectionName << " collection" << endl;
     for(int track_i=0; track_i<trackColl->getNumberOfElements(); track_i++) {
-      streamlog_out ( DEBUG2 ) << "Track " << track_i << endl;
+      streamlog_out ( DEBUG2 ) << "Track " << track_i << " " << trackColl << endl;
       Track *a_track = dynamic_cast<Track*>(trackColl->getElementAt(track_i));
 
       // check that it has hits not too far from ECAL....
       bool hitsNearEcal=false;
       const TrackerHitVec hits = a_track->getTrackerHits();
+      if ( hits.size()==0 ) {
+	streamlog_out ( ERROR ) << " ERROR! track found without any associated hits" << endl << 
+	  " check that TrackerHit collections have not been dropped from the input lcio file" << endl;
+	assert(0);
+      }
+
       float mostForwardHit[3]={0,0,-999};
       for (size_t i=hits.size()-1; i>0; i--) {
 

@@ -1,6 +1,7 @@
 #include "GarlicExtendedTrack.hh"
 #include "GarlicExtendedHit.hh"
 #include <algorithm>
+#include <cassert>
 
 void GarlicExtendedTrack::calculateTrk() {
   const TrackState* tst = 0;
@@ -18,6 +19,12 @@ void GarlicExtendedTrack::calculateTrk() {
   _helixIP->Initialize_Canonical(phi0, d0, z0, omega, tanLambda, bfield);
 
   TrackerHitVec hits = _parentTrack->getTrackerHits();
+
+  if (hits.size()==0) {
+    cout << "ERROR: track found with no associated hits" << endl;
+    cout << "make sure TrackerHit collections have not been dropped from the input lcio file! " << endl;
+    assert (0);
+  }
 
   for (int i=0; i<3; i++) 
     _helixIPRefPoint[i] = tst->getReferencePoint()[i];

@@ -1,6 +1,7 @@
 #include "GarlicConversionFinder.hh"
 #include <EVENT/TrackerHit.h>
 #include <iostream>
+#include <cassert>
 #include <TLorentzVector.h>
 #include <TDirectory.h>
 
@@ -340,6 +341,13 @@ GarlicConversionInfo GarlicConversionFinder::isConversion(Track* trk1, Track* tr
 
     for (int itt=0; itt<2; itt++) {
       TrackerHitVec allHits = info.trks[itt]->getTrackerHits();
+
+      if ( allHits.size()==0 ) {
+	cout << "ERROR from GarlicConversionFinder::isConversion : track with no hits " << endl;
+	cout << "check that TrackerHit collections have not been dropped from your input lcio file" << endl;
+	assert(0);
+      }
+
       for (size_t ih=0; ih<allHits.size(); ih++) {
         float hitradius(0);
         for (int i=0; i<2; i++) {
