@@ -119,17 +119,12 @@ void PointInCalo::assignZone(bool check) {
     //    float rmin = GarlicGeometryParameters::Instance().Get_rOfBarrel();
     float rmin = GarlicGeometryParameters::Instance().Get_positionBarrelLayer() [0];
 
-    //float rmax = GarlicGeometryParameters::Instance().Get_positionBarrelLayer() [GarlicGeometryParameters::Instance().Get_nBarrelEcalLayers()-1];
-    //float thick = rmax - GarlicGeometryParameters::Instance().Get_positionBarrelLayer() [GarlicGeometryParameters::Instance().Get_nBarrelEcalLayers()-2];
-    //rmax += thick; // be generous to deal with gear file definitions...
-
     float rmax = GarlicGeometryParameters::Instance().Get_rMaxOfBarrel();
 
-    // thick =
-    //   GarlicGeometryParameters::Instance().Get_positionBarrelLayer() [1] -
-    //   GarlicGeometryParameters::Instance().Get_positionBarrelLayer() [0];
-    //
-    // rmin -= thick; // be generous to deal with gear file definitions...
+    float thick = fabs(
+      GarlicGeometryParameters::Instance().Get_positionBarrelLayer() [GarlicGeometryParameters::Instance().Get_nBarrelEcalLayers()-1] - 
+      GarlicGeometryParameters::Instance().Get_positionBarrelLayer() [GarlicGeometryParameters::Instance().Get_nBarrelEcalLayers()-2] );
+    rmax += thick; // be generous to deal with gear file definitions...
 
     if ( prodRadiusMax>=rmin && prodRadiusMax<=rmax ) {
       zone = CALHITZONE_BARREL;
@@ -151,7 +146,7 @@ void PointInCalo::assignZone(bool check) {
         //      cout << i << " " << GarlicGeometryParameters::Instance().Get_positionBarrelLayer() [i] << endl;
         // }
         // cout << "--------" << endl;
-        assert(0);
+	assert(0);
       }
 
     }
@@ -227,7 +222,6 @@ int PointInCalo::getBarrelPseudoLayer(const float* pos) {
     if(prodRadius>prodRadiusMax) prodRadiusMax=prodRadius;
   }
 
-
   float laythick = GarlicGeometryParameters::Instance().Get_positionBarrelLayer()[1] - GarlicGeometryParameters::Instance().Get_positionBarrelLayer()[0];
 
   if (prodRadiusMax>=GarlicGeometryParameters::Instance().Get_rOfBarrel() - laythick ) { // hit inside ECAL
@@ -235,11 +229,10 @@ int PointInCalo::getBarrelPseudoLayer(const float* pos) {
       if(fabs(prodRadiusMax-GarlicGeometryParameters::Instance().Get_positionBarrelLayer()[ilayer])<barrelLayerDist){
         barrelLayerDist = fabs(prodRadiusMax-GarlicGeometryParameters::Instance().Get_positionBarrelLayer()[ilayer]);
         bestLayer = ilayer;
-      }
+      } else break; // we've gone past the closest layer
     }
   } else cout << "hit in front of ECAL..." << endl;
   if (bestLayer<0) cout << "error strange pseudolayer in barrel! " << bestLayer << endl;
-
 
   return bestLayer;
 }
@@ -266,6 +259,7 @@ int PointInCalo::getEndcapPseudoLayer(const float* pos) {
       bestLayer = ilayer;
     }
   }
+
   return bestLayer;
 }
 
