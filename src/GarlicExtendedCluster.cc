@@ -1542,7 +1542,9 @@ MCParticleVec GarlicExtendedCluster::allMCAncestors( MCParticle* mcp ) {
         ancs.push_back(mc);
         MCParticleVec pars = mc->getParents();
         for (size_t j=0; j<pars.size(); j++) {
-          temp2.push_back(pars[j]);
+	  int genstatus = pars[j]->getGeneratorStatus();
+	  if ( genstatus>0 && genstatus<3 ) // added by DJ, dec 2015. otherwise can produce long (inf?) loops in some cases
+	    temp2.push_back(pars[j]);
         }
       }
     }
