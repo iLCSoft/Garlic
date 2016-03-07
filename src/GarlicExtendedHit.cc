@@ -75,7 +75,7 @@ float PointInCalo::getBarrelCorrAbsThickness(int layer, const float* pos) {
   }
   int pstave = getPseudoStave();
   float pstavePhi = getPseudoStavePhi(pstave);
-  float normal[3] = {cos(pstavePhi), sin(pstavePhi), 0};
+  float normal[3] = {float(cos(pstavePhi)), float(sin(pstavePhi)), 0};
   float cosang = cosangle(normal, pos);
 
   float thickness = getAbsThickness(layer)/cosang;

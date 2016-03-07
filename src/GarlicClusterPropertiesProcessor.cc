@@ -621,7 +621,7 @@ void GarlicClusterPropertiesProcessor::end(){
     TCanvas* cc = new TCanvas();
     cc->Print(plname+"[");
 
-    ofstream myfile;
+    std::ofstream myfile;
     myfile.open ("garlicCuts.txt");
 
     // with remaining ones, get ranges

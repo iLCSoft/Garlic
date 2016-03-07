@@ -119,7 +119,7 @@ void GarlicGeometryHelpers::getFrontFaceProj(const float* a, const float* dir, f
   // project a point along some direction onto the ECAL front face
 
   // first try the endcaps (easier)
-  float pointOnPlane[3]={0, 0, fabs(GarlicGeometryParameters::Instance().Get_zOfEndcap()) };
+  float pointOnPlane[3]={float(0), float(0), float(fabs(GarlicGeometryParameters::Instance().Get_zOfEndcap()) ) };
   if ( a[2]<0 ) pointOnPlane[2]*=-1;
   float planeNorm[3]={0,0,1};
   float endcapProj[3];
@@ -371,7 +371,7 @@ void GarlicGeometryHelpers::getPointsOnBarrelPseudoLayer(int pslayer, int pseudo
   point1[0] = radius*cos(phi);
   point1[1] = radius*sin(phi);
 
-  float vectorInPLayer[2] = {-sin(phi), cos(phi)};
+  float vectorInPLayer[2] = { float(-sin(phi)) , float( cos(phi) )};
 
   for (int i=0; i<2; i++) point2[i]=point1[i]+vectorInPLayer[i];
   return;
