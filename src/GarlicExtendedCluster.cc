@@ -1360,10 +1360,10 @@ void GarlicExtendedCluster::MakeProjectionHistos(float encut, float maxX0) {
     // make bins about 1mm size
     //  int nbinsx = int ( (max_xprime-min_xprime)/cellsize ); // this was for one bin per cell
     //  int nbinsy = int ( (max_yprime-min_yprime)/cellsize );
-    //    int nbinsx = int ( (max_xprime-min_xprime) ); // this is for one bin per mm
-    //    int nbinsy = int ( (max_yprime-min_yprime) );
-    int nbinsx = int ( (max_xprime-min_xprime)/cellsize/2 ); // bin size half cell size -> Daniel changed 2016/04/01
-    int nbinsy = int ( (max_yprime-min_yprime)/cellsize/2 );
+    //int nbinsx = int ( (max_xprime-min_xprime) ); // this is for one bin per mm
+    //int nbinsy = int ( (max_yprime-min_yprime) );
+    int nbinsx = int ( (max_xprime-min_xprime)/(cellsize/2) ); // bin size half cell size -> Daniel changed, to avoid too many bins 2016/04/01
+    int nbinsy = int ( (max_yprime-min_yprime)/(cellsize/2) );
 
     // make sure this is divisible by int(cellsize)
     // for possible later rebinning to "cellsize" per bin (for seeding)
@@ -1380,7 +1380,6 @@ void GarlicExtendedCluster::MakeProjectionHistos(float encut, float maxX0) {
 
     nbinsx+=2*int(cellsize);
     nbinsy+=2*int(cellsize);
-
 
     cleanUpHistograms();
 

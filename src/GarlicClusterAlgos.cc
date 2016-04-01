@@ -65,9 +65,9 @@ std::map <CalorimeterHit*, bool> GarlicClusterAlgos::getSeeds(GarlicExtendedClus
   blah+="_";
   blah+=_nSaveHist+1;
 
-  // need to clone the histos and rebin them to cell size (originally they were 1mm)
+  // need to clone the histos and rebin them to approx cell size
   float cellsize = GarlicGeometryParameters::Instance().Get_padSizeEcal()[0];
-  int ics = int(cellsize);
+  int ics = int(cellsize / henergy->GetXaxis()->GetBinWidth(1) );
 
   henergy->Rebin2D(ics, ics);
   hhits->Rebin2D(ics, ics);
@@ -177,6 +177,7 @@ std::map <CalorimeterHit*, bool> GarlicClusterAlgos::getSeeds(GarlicExtendedClus
       badseedYvec.push_back(seed_y);
     }
 
+
     for (size_t i=0; i<seedCells.size(); i++) {
       henergy->SetBinContent(seedCells[i].first, seedCells[i].second, 0);
       hhits  ->SetBinContent(seedCells[i].first, seedCells[i].second, 0);
@@ -185,7 +186,6 @@ std::map <CalorimeterHit*, bool> GarlicClusterAlgos::getSeeds(GarlicExtendedClus
     maxbin = henergy->GetMaximumBin();
     maxen = henergy->GetBinContent( maxbin );
   }
-
 
   if (henergy && hhits && _fhistos) {
 
