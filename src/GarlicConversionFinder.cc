@@ -394,8 +394,8 @@ GarlicConversionInfo GarlicConversionFinder::isConversion(Track* trk1, Track* tr
   if ( rejected==0 ) {
     if ( (info.nhitsInside[0]>_max_hits_inside && info.nhitsInside[1]>_max_hits_inside) ||
 	 info.nhitsInside[0]>_veto_hits_inside || info.nhitsInside[1]>_veto_hits_inside) {
-      cout << "rejecting conversion: too many hits before the conversion position!" <<
-	info.nhitsInside[0] << " " << info.nhitsInside[1] << endl;
+      // cout << "rejecting conversion: too many hits before the conversion position!" <<
+      //	info.nhitsInside[0] << " " << info.nhitsInside[1] << endl;
       rejected=7;
     }
   }
@@ -408,11 +408,8 @@ GarlicConversionInfo GarlicConversionFinder::isConversion(Track* trk1, Track* tr
 
     //    const float m_rho = 0.775;
     //    const float w_rho = 0.146;
-
     //    const float m_k0 = 0.498;
-
     //    const float m_lambda = 1.115;
-
 
     TLorentzVector v[2];
     for (int i=0; i<2; i++) v[i].SetVectM( momentumAtConv[i], m_e );

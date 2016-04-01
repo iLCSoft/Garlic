@@ -19,6 +19,11 @@ void PointInCalo::calculateX0depth() {
       cout << "strangely deep barrel hit! " << _x0depth << " zone " << getZone() << " " << _pos[0] << " " << _pos[1] << " " << _pos[2] <<
         " : " << _pseudoLayer << endl;
 
+    if (_x0depth<0) cout << "strangely shallow end/ring hit! " <<
+		      _x0depth << " zone " << getZone() << 
+		      " pos: " << _pos[0] << " " << _pos[1] << " " << _pos[2] <<
+		      " player, thickPlayer " << _pseudoLayer << " " << getAbsThickness(_pseudoLayer) << endl;
+
   } else if (getZone() == CALHITZONE_ENDCAP || getZone() == CALHITZONE_RING) {
     // normal to front face
     float norm[3] = {0,0,1};
@@ -26,7 +31,7 @@ void PointInCalo::calculateX0depth() {
     float angle = GarlicGeometryHelpers::angle(norm, _pos);
     _x0depth = getAbsThickness(_pseudoLayer)/fabs(cos(angle));
 
-    if (_x0depth>100) cout << "strangely deep end/ring hit! " <<
+    if (_x0depth>150) cout << "strangely deep end/ring hit! " <<
       _x0depth << " zone " << getZone() << " " << _pos[0] << " " << _pos[1] << " " << _pos[2] << " " << angle << " " << cos(angle) << " " << _pseudoLayer << endl;
 
 
@@ -58,7 +63,11 @@ void PointInCalo::calculateX0depth() {
 }
 
 float PointInCalo::getAbsThickness(int layer) {
-  if (layer<0 || layer>=GarlicGeometryParameters::Instance().Get_nBarrelEcalLayers()) return -999;
+  if (layer<0 || layer>GarlicGeometryParameters::Instance().Get_nBarrelEcalLayers()) {
+    cout << "asking for non-existent pseudo-layer! " << layer << " MAX = " << GarlicGeometryParameters::Instance().Get_nBarrelEcalLayers() << endl;
+    assert(0); // this should never happen!
+  }
+
   float absThick(0);
   for (int il=0; il<layer; il++) {
     absThick+=GarlicGeometryParameters::Instance().Get_absThicknessBarrelLayer()[il];

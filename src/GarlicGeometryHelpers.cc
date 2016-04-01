@@ -189,8 +189,10 @@ void GarlicGeometryHelpers::getFrontFaceProj(const float* a, const float* dir, f
       for (int i=0; i<3; i++) proj[i] = barrelIntersection1[i];
     else if ( dist[2]<=dist[0] && dist[2]<=dist[1] ) 
       for (int i=0; i<3; i++) proj[i] = barrelIntersection2[i];
-    else 
+    else {
       cout << "GarlicGeometryHelpers::getFrontFaceProj shouldn;t get here? " << dist[0] << " " << dist[1] << " " << dist[2] << endl;
+      assert(0);
+    }
   }
   
   return;

@@ -52,6 +52,7 @@ public:
   void setHITEN_MEAN          (float ff) {_genObj->setFloatVal( HITEN_MEAN 	    , ff);}
   void setHITEN_RMS           (float ff) {_genObj->setFloatVal( HITEN_RMS 	    , ff);}
   void setHITEN_Q1            (float ff) {_genObj->setFloatVal( HITEN_Q1 	    , ff);}
+  void setHITEN_Q2            (float ff) {_genObj->setFloatVal( HITEN_Q2 	    , ff);}
   void setHITEN_Q3            (float ff) {_genObj->setFloatVal( HITEN_Q3	    , ff);}
   void setNNOUT               (float ff) {_genObj->setFloatVal( NNOUT		    , ff);}
   void setFRACDIM_2           (float ff) {_genObj->setFloatVal( FRACDIM_2 	    , ff);}
@@ -94,6 +95,18 @@ public:
   void setPDF_ELECTRON_WIDTHMIN     (float ff) {_genObj->setFloatVal(   PDF_ELECTRON_WIDTHMIN   ,ff); }
   void setPDF_ELECTRON_CYLIN        (float ff) {_genObj->setFloatVal(   PDF_ELECTRON_CYLIN      ,ff); }
   void setPDF_ELECTRON_EONP         (float ff) {_genObj->setFloatVal(   PDF_ELECTRON_EONP       ,ff); }
+
+
+  void setELECTRON_EONP     (float ff) {_genObj->setFloatVal( ELECTRON_EONP    ,ff); }
+  void setEARLY1DMOL90_MIN  (float ff) {_genObj->setFloatVal( EARLY1DMOL90_MIN ,ff); }
+  void setEARLY1DMOL90_MAX  (float ff) {_genObj->setFloatVal( EARLY1DMOL90_MAX ,ff); }
+  void setFRACPLAYERS	    (float ff) {_genObj->setFloatVal( FRACPLAYERS      ,ff); }
+  void setMAXPLAYERHOLE     (float ff) {_genObj->setFloatVal( MAXPLAYERHOLE    ,ff); }
+  void setCLMASS	    (float ff) {_genObj->setFloatVal( CLMASS           ,ff); }
+
+  void setNLAYERS	    (int ff) {_genObj->setIntVal( NLAYERS          ,ff); }
+  void setNPLAYERS	    (int ff) {_genObj->setIntVal( NPLAYERS         ,ff); }
+
 
   void setTUBE_EN(float* ff) {
     _genObj->setFloatVal(TUBE_EN_0, ff[0]);
@@ -183,6 +196,7 @@ public:
   float getHITEN_MEAN          () {return _genObj->getFloatVal( HITEN_MEAN 	    );}
   float getHITEN_RMS           () {return _genObj->getFloatVal( HITEN_RMS 	    );}
   float getHITEN_Q1            () {return _genObj->getFloatVal( HITEN_Q1 	    );}
+  float getHITEN_Q2            () {return _genObj->getFloatVal( HITEN_Q2 	    );}
   float getHITEN_Q3            () {return _genObj->getFloatVal( HITEN_Q3	    );}
   float getNNOUT               () {return _genObj->getFloatVal( NNOUT		    );}
   float getFRACDIM_2           () {return _genObj->getFloatVal( FRACDIM_2 	    );}
@@ -224,6 +238,16 @@ public:
   float getPDF_ELECTRON_WIDTHMIN    () {return _genObj->getFloatVal(   PDF_ELECTRON_WIDTHMIN   ); }
   float getPDF_ELECTRON_CYLIN       () {return _genObj->getFloatVal(   PDF_ELECTRON_CYLIN      ); }
   float getPDF_ELECTRON_EONP        () {return _genObj->getFloatVal(   PDF_ELECTRON_EONP       ); }
+
+  float getELECTRON_EONP     () {return _genObj->getFloatVal( ELECTRON_EONP    ); }
+  float getEARLY1DMOL90_MIN  () {return _genObj->getFloatVal( EARLY1DMOL90_MIN ); }
+  float getEARLY1DMOL90_MAX  () {return _genObj->getFloatVal( EARLY1DMOL90_MAX ); }
+  float getFRACPLAYERS	     () {return _genObj->getFloatVal( FRACPLAYERS      ); }
+  float getMAXPLAYERHOLE     () {return _genObj->getFloatVal( MAXPLAYERHOLE    ); }
+  float getCLMASS	     () {return _genObj->getFloatVal( CLMASS           ); }
+  int getNLAYERS	   () {return _genObj->getIntVal( NLAYERS          ); }
+  int getNPLAYERS	   () {return _genObj->getIntVal( NPLAYERS         ); }
+
   
   float getTUBE_EN(int i) {
     switch (i) {
@@ -335,6 +359,8 @@ private:
   // integer variables
   enum {
     ID=0, NHITS, ZONE, NNSEL,
+    NLAYERS,
+    NPLAYERS,    
     NINT
   };
 
@@ -383,6 +409,15 @@ private:
     PDF_ELECTRON_WIDTHMIN   ,
     PDF_ELECTRON_CYLIN      ,
     PDF_ELECTRON_EONP      ,
+
+    ELECTRON_EONP,
+    EARLY1DMOL90_MIN,
+    EARLY1DMOL90_MAX,
+    FRACPLAYERS,
+    MAXPLAYERHOLE,
+    CLMASS,
+    HITEN_Q2,
+    
     NFLOAT
   };
 

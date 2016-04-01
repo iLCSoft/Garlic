@@ -52,7 +52,7 @@ void GarlicClusterSelector::readInCutValues(std::string cutFileName) {
       sline >> vname;
 
       if ( find( _varClasses[keyClass].begin(), _varClasses[keyClass].end(), vname )==_varClasses[keyClass].end() )
-	_varClasses[keyClass].push_back( vname );
+        _varClasses[keyClass].push_back( vname );
 
       key.second = vname;
 
@@ -62,17 +62,17 @@ void GarlicClusterSelector::readInCutValues(std::string cutFileName) {
       sline >> dummy;
       params.clear();
       while (sline) {
-	par=987654321;
-	sline >> par; 
-	if ( par!=987654321 ) params.push_back(par);
+        par=987654321;
+        sline >> par;
+        if ( par!=987654321 ) params.push_back(par);
       }
 
       if ( _varCuts.find(key)!=_varCuts.end() ) {
-	_varCuts[key][percentile]=params;
+        _varCuts[key][percentile]=params;
       } else {
-	std::map < float, std::vector < float > > temp;
-	temp[percentile]=params;
-	_varCuts[key]=temp;
+        std::map < float, std::vector < float > > temp;
+        temp[percentile]=params;
+        _varCuts[key]=temp;
       }
 
     } else {
@@ -87,7 +87,7 @@ void GarlicClusterSelector::readInCutValues(std::string cutFileName) {
     for ( std::map < std::pair < int, std::string > , std::vector < std::string > >::iterator itt=_varClasses.begin(); itt!=_varClasses.end(); itt++) {
       cout << itt->first.first << " " << itt->first.second << " : ";
       for (size_t i=0; i<itt->second.size(); i++) {
-	cout << itt->second[i] << " ";
+        cout << itt->second[i] << " ";
       }
       cout << endl;
     }
@@ -96,7 +96,7 @@ void GarlicClusterSelector::readInCutValues(std::string cutFileName) {
   if (verbose) dump_cutvalues();
 
   return;
-  }
+}
 
 std::map < std::string, float > GarlicClusterSelector::cluster_select(GarlicExtendedCluster* ecl) {
 
@@ -129,19 +129,19 @@ std::map < std::string, float > GarlicClusterSelector::cluster_select(GarlicExte
       classScore+=sels[i];
       switch (sels[i] ) {
       case TIGHT:
-	nTight++;
-	break;
+        nTight++;
+        break;
       case LOOSE:
-	nLoose++;
-	break;
+        nLoose++;
+        break;
       case VERYLOOSE:
-	nVLoose++;
-	break;
+        nVLoose++;
+        break;
       case REJECT:
-	nFail++;
-	break;
+        nFail++;
+        break;
       default:
-	cout << "GarlicClusterSelector::cluster_select ERROR: unknown selection code!" << sels[i] << endl;
+        cout << "GarlicClusterSelector::cluster_select ERROR: unknown selection code!" << sels[i] << endl;
       }
     }
 
@@ -152,8 +152,8 @@ std::map < std::string, float > GarlicClusterSelector::cluster_select(GarlicExte
     if ( float(nTight+nLoose+nVLoose) / float(sels.size() ) < 0.5 )  okVLoose=false;
 
     if ( verbose ) {
-      cout << "class selection:" << itt->first << " T,L,VL,F: " << nTight << " " << nLoose << " " << nVLoose << " " << nFail << " / " << sels.size() << 
-	" ; score:" << classScore << " okT, okL, okVL?" << okTight << " " << okLoose << " " << okVLoose << endl;
+      cout << "class selection:" << itt->first << " T,L,VL,F: " << nTight << " " << nLoose << " " << nVLoose << " " << nFail << " / " << sels.size() <<
+        " ; score:" << classScore << " okT, okL, okVL?" << okTight << " " << okLoose << " " << okVLoose << endl;
     }
 
     classSelection[itt->first]= float(classScore) / float(TIGHT*sels.size()); // fraction of max score
@@ -167,7 +167,7 @@ std::map < std::string, float > GarlicClusterSelector::cluster_select(GarlicExte
   } else if (okLoose)  {
     if      ( totNFail==0 ) sel=LOOSE;
     else if ( totNFail <3 ) sel=VERYLOOSE;
-  } else if (okVLoose && totNFail<3) 
+  } else if (okVLoose && totNFail<3)
     sel=VERYLOOSE;
 
   if (verbose && sel>0)
@@ -188,7 +188,7 @@ void GarlicClusterSelector::dump_cutvalues() {
     for ( std::map < float, std::vector < float > >::iterator jtt=bb.begin(); jtt!=bb.end(); jtt++) {
       cout << "---- " << jtt->first << " : ";
       for (size_t k=0; k<jtt->second.size(); k++) {
-	cout << jtt->second[k] << ", ";
+        cout << jtt->second[k] << ", ";
       }
       cout << endl;
     }
@@ -207,7 +207,7 @@ std::vector < int > GarlicClusterSelector::cluster_classSelection(GarlicExtended
     for (size_t i=0; i<class_varnames.size(); i++) {
       selection.push_back( cluster_select_variable ( ecl, class_varnames[i] ) );
     }
-  } 
+  }
   return selection;
 }
 
@@ -231,20 +231,20 @@ int GarlicClusterSelector::cluster_select_variable(GarlicExtendedCluster* ecl, s
   }
 
   float value = ecl->getClusterProperty(variable);
-    
+
   int sel(0);
-  
+
   if ( _varCuts.find(cutset)==_varCuts.end() ) {
     cout << "GarlicClusterSelector::cluster_select_variable: ERROR, could not find cuts for pdg " << cutset.first << " , variable " << cutset.second << endl;
     assert (0);
-  } 
+  }
 
   std::map < float, std::vector < float > > parameters = _varCuts[cutset];
 
   float perc[4]={0.01, 0.05, 0.95, 0.99}; // percentiles
   float cut[4]={0};
 
-  
+
 
   float log_e(0);
   if ( ecl->getAssociatedTrack() ) {
@@ -272,8 +272,8 @@ int GarlicClusterSelector::cluster_select_variable(GarlicExtendedCluster* ecl, s
 
   if      ( value > cut[1] && value < cut[2] ) sel=TIGHT; // 2->98 %
   else if ( value > cut[0] && value < cut[3] ) sel=LOOSE; // 1->99 %
-  else if ( value > ( cut[0] - 3*fabs(cut[0]-cut[1]) ) && 
-	    value < ( cut[3] + 3*fabs(cut[3]-cut[2]) ) ) sel=VERYLOOSE;
+  else if ( value > ( cut[0] - 3*fabs(cut[0]-cut[1]) ) &&
+            value < ( cut[3] + 3*fabs(cut[3]-cut[2]) ) ) sel=VERYLOOSE;
 
   if (verbose) {
     cout << "value: " << value << " cuts: " << cut[0] << " " << cut[1] << " " << cut[2] << " " << cut[3] << " : sel = " << sel << endl;

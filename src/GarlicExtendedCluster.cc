@@ -712,14 +712,27 @@ void GarlicExtendedCluster::calculateClusterShapes() {
     _clusterPointingAngle = angle(_clusterShapes->getEigenVecInertia(), _clusterShapes->getCentreOfGravity());
   } else {
     getFrontFaceProj(_clusterShapes->getCentreOfGravity(), getReferenceDirection(), _projectedPosition);
-    _clusterPointingAngle = angle(_clusterShapes->getEigenVecInertia(),  getReferenceDirection() );
+
+    if ( fabs(_projectedPosition[0])+fabs(_projectedPosition[1])+fabs(_projectedPosition[2]) < 0.01 ) { // no intersection found when using cluster direction, project to IP
+      getFrontFaceProj(_clusterShapes->getCentreOfGravity(), _clusterShapes->getCentreOfGravity(), _projectedPosition);
+      _clusterPointingAngle = angle(_clusterShapes->getEigenVecInertia(), _clusterShapes->getCentreOfGravity());
+    } else { // we found a good intersection using cluster direction, use that
+      _clusterPointingAngle = angle(_clusterShapes->getEigenVecInertia(),  getReferenceDirection() );
+
+      float dist(0);
+      for (int i=0; i<3; i++) dist+=pow( _projectedPosition[i]-_clusterShapes->getCentreOfGravity()[i], 2);
+      dist=sqrt(dist);
+      if ( dist>250 ) { // seems too far away, use proj to ip
+	getFrontFaceProj(_clusterShapes->getCentreOfGravity(), _clusterShapes->getCentreOfGravity(), _projectedPosition);
+	_clusterPointingAngle = angle(_clusterShapes->getEigenVecInertia(), _clusterShapes->getCentreOfGravity());
+      }
+    }
 
     // check it's reasonable....
     // calculate distance beween projected and COG
     float dist(0);
     for (int i=0; i<3; i++) dist+=pow( _projectedPosition[i]-_clusterShapes->getCentreOfGravity()[i], 2);
     dist=sqrt(dist);
-
 
     if ( dist>500 ) { // seems too far away! maybe initial direction was somewhat crazy? assume pointing...
 
@@ -1347,8 +1360,10 @@ void GarlicExtendedCluster::MakeProjectionHistos(float encut, float maxX0) {
     // make bins about 1mm size
     //  int nbinsx = int ( (max_xprime-min_xprime)/cellsize ); // this was for one bin per cell
     //  int nbinsy = int ( (max_yprime-min_yprime)/cellsize );
-    int nbinsx = int ( (max_xprime-min_xprime) ); // this is for one bin per mm
-    int nbinsy = int ( (max_yprime-min_yprime) );
+    //    int nbinsx = int ( (max_xprime-min_xprime) ); // this is for one bin per mm
+    //    int nbinsy = int ( (max_yprime-min_yprime) );
+    int nbinsx = int ( (max_xprime-min_xprime)/cellsize/2 ); // bin size half cell size -> Daniel changed 2016/04/01
+    int nbinsy = int ( (max_yprime-min_yprime)/cellsize/2 );
 
     // make sure this is divisible by int(cellsize)
     // for possible later rebinning to "cellsize" per bin (for seeding)
@@ -1369,8 +1384,13 @@ void GarlicExtendedCluster::MakeProjectionHistos(float encut, float maxX0) {
 
     cleanUpHistograms();
 
-    if ( nbinsx>1000 || nbinsy>1000 ) cout << "WARNING TOO MANY BINS! cluster too big " << nbinsx << " " << nbinsy << endl;
-    else {
+    if ( nbinsx>1500 || nbinsy>1500 ) {
+      cout << "WARNING TOO MANY BINS! cluster too big " << nbinsx << " " << nbinsy << endl;
+      assert(0);
+    } else if ( nbinsx<1 || nbinsy<1 ) {
+      cout << "WARNING TOO FEW BINS! " << nbinsx << " " << nbinsy << endl;
+      assert(0);
+    } else {
 
 
       TString hname = "enHist"; hname+=_thisCounter;
@@ -1584,9 +1604,11 @@ IMPL::LCGenericObjectImpl GarlicExtendedCluster::getGenericObject() {
   obj.setHITEN_MEAN          (getHitMeanEn());
   obj.setHITEN_RMS           (getHitRMSEn());
   obj.setHITEN_Q1            (getHitQ1En());
+  obj.setHITEN_Q2            (getHitQ2En());
   obj.setHITEN_Q3            (getHitQ3En());
   obj.setNNOUT               (getNNval());
   obj.setTRACKANGLE_PROJ     (getTrackAng_proj());
+
 
   float* f = getFractalDimension();
   obj.setFRACDIM_2           (f[0]);
@@ -1634,6 +1656,22 @@ IMPL::LCGenericObjectImpl GarlicExtendedCluster::getGenericObject() {
 
   f = getRelLongN();
   obj.setRELLONG_N(f);
+
+  // added extra vars: DJ 2016/03/29
+
+  float eonp = getAssociatedTrack() ? getEnergy()/getAssociatedTrack()->getTotalMomentum() : 0 ;
+  obj.setELECTRON_EONP     (  eonp  );
+
+  obj.setREL_MEAN_DEPTH    (getRelMeanDepth()  );
+  obj.setEARLY1DMOL90_MIN  (getEarly1dMol90().first  );
+  obj.setEARLY1DMOL90_MAX  (getEarly1dMol90().second  );
+  obj.setFRACPLAYERS       (getFracPseudoLayers()  );
+  obj.setMAXPLAYERHOLE     (getBiggestPlayHole()  );
+  obj.setCLMASS            (getClusterMass()  );
+  obj.setNLAYERS           (getNLayers()  );
+  obj.setNPLAYERS          (getNPseudoLayers() );
+
+
 
   return obj.getGenericObject();
 
