@@ -55,7 +55,7 @@ public:
   }
 
   void Set_barrelStaveDir (std::vector< std::vector < float > > gg) {_barrelStaveDir=gg;}
-  void Set_defaultDecoder (CellIDDecoder<CalorimeterHit>* dec) {_defaultDecoder=dec;}
+  void Set_defaultDecoder (lcio::CellIDDecoder<lcio::CalorimeterHit>* dec) {_defaultDecoder=dec;}
 
   void Set_absorberRadiationLength (float x0) {_absorberRadiationLength=x0;}
 
@@ -94,7 +94,7 @@ public:
   float * Get_positionEndcapLayer () {return _positionEndcapLayer;}
 
   std::vector< std::vector < float > > Get_barrelStaveDir () {return _barrelStaveDir;}
-  CellIDDecoder<CalorimeterHit>* Get_defaultDecoder () {return _defaultDecoder;}
+  lcio::CellIDDecoder<lcio::CalorimeterHit>* Get_defaultDecoder () {return _defaultDecoder;}
 
 private:
 
@@ -136,7 +136,7 @@ private:
 
   std::vector< std::vector < float > > _barrelStaveDir;
 
-  CellIDDecoder<CalorimeterHit>* _defaultDecoder;
+  lcio::CellIDDecoder<lcio::CalorimeterHit>* _defaultDecoder;
 
   void init() {
     _rOfBarrel=-999;

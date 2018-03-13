@@ -25,6 +25,8 @@ using std::endl;
 #include "GarlicExtendedCluster.hh"
 #include "GarlicExtendedHit.hh"
 
+using namespace lcio;
+
 std::map <CalorimeterHit*, bool> GarlicClusterAlgos::getSeeds(GarlicExtendedCluster* preClus) {
 
   float energyCutMip = GarlicAlgorithmParameters::Instance().GetSeedHitEnergyCut();

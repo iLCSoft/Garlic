@@ -32,6 +32,8 @@ using std::max;
 using std::cout;
 using std::endl;
 
+using namespace lcio;
+
 int GarlicExtendedCluster::counter=0;
 
 
