@@ -11,7 +11,7 @@ class GarlicClusterVarsGenericObject {
 
 public:
   GarlicClusterVarsGenericObject() {
-    _genObj = new LCGenericObjectImpl(NINT, NFLOAT, 0);
+    _genObj = new lcio::LCGenericObjectImpl(NINT, NFLOAT, 0);
     for (int i=0; i<NINT; i++) _genObj->setIntVal(i, -999);
     for (int i=0; i<NFLOAT; i++) _genObj->setFloatVal(i, -999);
   }
@@ -20,7 +20,7 @@ public:
     assert(obj->getNInt()==NINT);
     assert(obj->getNFloat()==NFLOAT);
     assert(obj->getNDouble()==0);
-    _genObj = new LCGenericObjectImpl(NINT, NFLOAT, 0);
+    _genObj = new lcio::LCGenericObjectImpl(NINT, NFLOAT, 0);
     for (int i=0; i<NINT; i++) _genObj->setIntVal( i, obj->getIntVal(i) );
     for (int i=0; i<NFLOAT; i++) _genObj->setFloatVal( i, obj->getFloatVal(i) );
   }
